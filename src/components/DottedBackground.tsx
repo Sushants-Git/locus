@@ -20,6 +20,6 @@ const DottedBackground: React.FC<DottedBackgroundProps> = ({ children }) => {
             </div>
         </>
     );
-}
+};
 
 export default DottedBackground;
