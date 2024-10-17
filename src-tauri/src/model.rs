@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::io;
 use thiserror::Error;
+use xcb::{ConnError, Error};
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -27,4 +28,29 @@ pub struct Window {
 
 pub struct StreamState {
     pub cancel_flag: Arc<Mutex<bool>>,
+}
+
+#[derive(Error, Debug)]
+pub enum XError {
+    #[error("Connection error: {0}")]
+    ConnError(#[from] ConnError),
+    #[error("Reply not received: {0}")]
+    ReplyError(#[from] Error),
+    #[error("Failed to fetch active window")]
+    ActiveWindowError,
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub struct ActiveWindow {
+    pub class: String,
+    pub title: String,
+}
+
+impl ActiveWindow {
+    pub fn none() -> Self {
+        ActiveWindow {
+            title: "none".to_string(),
+            class: "none".to_string(),
+        }
+    }
 }

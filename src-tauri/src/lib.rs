@@ -2,10 +2,11 @@ mod model;
 mod utils;
 mod window_info;
 
-use model::StreamState;
 use std::sync::Arc;
-use tauri::{generate_handler, State};
 use tokio::sync::Mutex;
+use tauri::{generate_handler, State};
+
+use model::StreamState;
 use utils::stream;
 
 #[tauri::command]

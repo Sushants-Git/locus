@@ -4,17 +4,20 @@ use std::{env, path::Path};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream;
 
-use crate::model::{AppError, Window};
+use crate::model::{ActiveWindow, AppError, Window};
 
 const HYPRLAND_INSTANCE_SIGNATURE: &str = "HYPRLAND_INSTANCE_SIGNATURE";
 const XDG_RUNTIME_DIR: &str = "XDG_RUNTIME_DIR";
 const HYPR_DIR: &str = "hypr";
 const DEFAULT_RUNTIME_DIR: &str = "/run/user";
 
-pub async fn get_title() -> Result<String, AppError> {
+pub async fn get_hypr_active_window_info() -> Result<ActiveWindow, AppError> {
     let input = get_hyprctl_active_window().await?;
     let window = string_to_window(&input)?;
-    Ok(window.title)
+    Ok(ActiveWindow {
+        title: window.title,
+        class: window.class,
+    })
 }
 
 fn string_to_window(input: &str) -> Result<Window, AppError> {

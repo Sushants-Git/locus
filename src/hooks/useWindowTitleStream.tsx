@@ -1,49 +1,61 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { Event, listen, UnlistenFn } from "@tauri-apps/api/event";
+
+import { ActiveWindow } from "../../src/model/PomodoroTypes";
 import useStreamStore from "../stores/streamStore";
 
 export function useWindowTitleStream() {
-    const [title, setTitle] = useState("");
+    const [activeWindow, setActiveWindow] = useState(ActiveWindow.none());
     const { streamStatus, changeStreamStatus } = useStreamStore();
+
+    const handleWindowTitleChange = useCallback((event: Event<ActiveWindow>) => {
+        setActiveWindow(event.payload);
+    }, []);
+
+    const startListener = useCallback(async () => {
+        try {
+            await invoke("stream_title");
+            const unlisten = await listen<ActiveWindow>(
+                "active-window-title",
+                handleWindowTitleChange
+            );
+            return unlisten;
+        } catch (error) {
+            console.error("Failed to start stream or listen to event:", error);
+            return null;
+        }
+    }, [handleWindowTitleChange]);
+
+    const stopListener = useCallback(async () => {
+        try {
+            await invoke("stop_stream");
+        } catch (error) {
+            console.error("Failed to stop stream:", error);
+        }
+    }, []);
 
     useEffect(() => {
         let unlisten: UnlistenFn | null = null;
 
-        const setupListener = async () => {
-            try {
-                await invoke("stream_title");
-                unlisten = await listen<string>("window-title-updated", (event) => {
-                    setTitle(event.payload);
-                });
-            } catch (error) {
-                console.error("Failed to start stream or listen to event:", error);
+        const manageStream = async () => {
+            if (streamStatus === "streaming") {
+                unlisten = await startListener();
+            } else if (streamStatus === "stopped") {
+                await stopListener();
             }
         };
 
-        const stopListener = async () => {
-            try {
-                await invoke("stop_stream");
-            } catch (error) {
-                console.error("Failed to stop stream:", error);
-            }
-        };
-
-        if (streamStatus === "streaming") {
-            setupListener();
-        } else if (streamStatus === "stopped") {
-            stopListener();
-        }
+        manageStream();
 
         return () => {
             if (unlisten) {
                 unlisten();
             }
         };
-    }, [streamStatus]);
+    }, [streamStatus, startListener, stopListener]);
 
-    const isStreamRunning = () =>
-        !(streamStatus === "stopped" || streamStatus === "not-started");
+    const isStreamRunning = () => !(streamStatus === "stopped" || streamStatus === "not-started");
 
-    return { title, streamStatus, changeStreamStatus, isStreamRunning };
+    return { activeWindow, streamStatus, changeStreamStatus, isStreamRunning };
 }
