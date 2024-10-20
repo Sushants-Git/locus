@@ -1,21 +1,23 @@
 import { useRef } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatTime } from "../../src/utils/utils";
 
 type Range = [start: number, end: number];
 
-type SubSessionDetails = {
+type TitleRanges = {
     title: string;
     range: Range;
 };
 
-type SessionDetails = {
+type ActiveWindowDetails = {
     windowClass: string;
-    titleRanges: SubSessionDetails[];
+    titleRanges: TitleRanges[];
 };
 
 const Chart = () => {
     const divRef = useRef<HTMLDivElement | null>(null);
 
-    const data: SessionDetails[] = [
+    const data: ActiveWindowDetails[] = [
         {
             windowClass: "Visual Studio Code",
             titleRanges: [
@@ -62,35 +64,34 @@ const Chart = () => {
         },
     ];
 
-    console.log("humm");
-
     return (
-        <div className="border w-screen border-black">
-            <div className="w-3/4 border border-red-400" ref={divRef}>
+        <div className=" w-screen">
+            <div
+                className="w-3/4  m-auto border border-gray-200 py-7 px-6 bg-white rounded-lg"
+                ref={divRef}
+            >
                 <TimelineChart data={data} />
             </div>
         </div>
     );
 };
 
-function TimelineChart({ data }: { data: SessionDetails[] }) {
+function TimelineChart({ data }: { data: ActiveWindowDetails[] }) {
     const timelineRows = data.map(session => (
-        <div className="flex items-center" key={session.windowClass}>
-            <div className="w-44 text-lg">{session.windowClass}</div>
-            <TimelineRow data={session.titleRanges} />
+        <div className="flex items-center gap-5" key={session.windowClass}>
+            <div className="w-28 truncate select-none text-sm font-500">{session.windowClass}</div>
+            <TimelineRow titleRanges={session.titleRanges} />
         </div>
     ));
 
-    return (
-        <div className="flex flex-col gap-3">{timelineRows}</div>
-    );
+    return <div className="flex flex-col gap-4">{timelineRows}</div>;
 }
 
-function TimelineRow({ data }: { data: SubSessionDetails[] }) {
+function TimelineRow({ titleRanges }: { titleRanges: TitleRanges[] }) {
     // function to check timeBars : replace timeBars() with timeBarss
-    // const timeBarss = data.map((subSession, index) => (
+    // const timeBarss = titleRanges.map((subSession, index) => (
     //     <TimelineRangeBars
-    //         previousRange={data[index - 1]?.range}
+    //         previousRange={titleRanges[index - 1]?.range}
     //         currentRange={subSession.range}
     //         key={subSession.title}
     //     />
@@ -100,14 +101,20 @@ function TimelineRow({ data }: { data: SubSessionDetails[] }) {
         const timeBars = [];
         let i = 0;
 
-        while (i < data.length) {
-            let currentRange: Range = [...data[i].range];
-            const previousRange = i > 0 ? data[i - 1].range : null;
+        while (i < titleRanges.length) {
+            let currentRange: Range = [...titleRanges[i].range];
+            const previousRange = i > 0 ? titleRanges[i - 1].range : null;
+
+            let barDetails = [titleRanges[i]];
 
             // Merge consecutive ranges if they are contiguous
             // [10,20], [20,40], [40,60] -> [10,60]
-            while (i + 1 < data.length && data[i].range[1] === data[i + 1].range[0]) {
-                currentRange[1] = data[i + 1].range[1];
+            while (
+                i + 1 < titleRanges.length &&
+                titleRanges[i].range[1] === titleRanges[i + 1].range[0]
+            ) {
+                currentRange[1] = titleRanges[i + 1].range[1];
+                barDetails.push(titleRanges[i + 1]);
                 i++;
             }
 
@@ -116,6 +123,7 @@ function TimelineRow({ data }: { data: SubSessionDetails[] }) {
                     key={i}
                     previousRange={previousRange}
                     currentRange={currentRange}
+                    barDetails={barDetails}
                 />
             );
 
@@ -131,37 +139,37 @@ function TimelineRow({ data }: { data: SubSessionDetails[] }) {
 function TimelineRangeBars({
     previousRange,
     currentRange,
+    barDetails,
 }: {
     previousRange: Range | null;
     currentRange: Range;
+    barDetails: TitleRanges[];
 }) {
     const calculateBarWidth = (range: Range) => {
-        return (((rangeDifference(range) / 260))) * 100;
+        return (rangeDifference(range) / 260) * 100;
     };
-
-    // Example ranges: [10, 50], [50, 60], [80, 120]
-    // Total study session duration: 120 minutes
-    //
-    // For the range [10, 50]:
-    // 1. Duration: (50 - 10) = 40 minutes
-    // 2. Width percentage = (duration / totalDuration) * 100
-    //    - Example: (40 / 120) * 100 = 33.33%
-    // 
-    // This percentage determines the bar's width relative to the total chart area width.
 
     const rangeDifference = (range: Range) => {
         return range[1] - range[0];
     };
 
     if (!previousRange && currentRange[0] === 0) {
-        return <TimelineBar width={calculateBarWidth(currentRange)} barStatus="active" />;
+        return (
+            <TimelineBarWithToolTip
+                width={calculateBarWidth(currentRange)}
+                barDetails={barDetails}
+            />
+        );
     }
 
     if (!previousRange) {
         return (
             <>
                 <TimelineBar width={calculateBarWidth([0, currentRange[0]])} barStatus="inactive" />
-                <TimelineBar width={calculateBarWidth(currentRange)} barStatus="active" />
+                <TimelineBarWithToolTip
+                    width={calculateBarWidth(currentRange)}
+                    barDetails={barDetails}
+                />
             </>
         );
     }
@@ -172,18 +180,66 @@ function TimelineRangeBars({
                 width={calculateBarWidth([previousRange[1], currentRange[0]])}
                 barStatus="inactive"
             />
-            <TimelineBar width={calculateBarWidth(currentRange)} barStatus="active" />
+            <TimelineBarWithToolTip
+                width={calculateBarWidth(currentRange)}
+                barDetails={barDetails}
+            />
         </>
     );
 }
 
-function TimelineBar({ width, barStatus }: { width: number; barStatus: "active" | "inactive" }) {
+function TimelineBarWithToolTip({
+    width,
+    barDetails,
+}: {
+    width: number;
+    barDetails: TitleRanges[];
+}) {
+    const getToolTipText = (barDetails: TitleRanges[]) => {
+        return (
+            <div className="space-y-2">
+                {barDetails.map(({ title, range }) => (
+                    <div key={title} className="flex justify-between gap-3 select-none">
+                        <div className="text-sm text-gray-800">{title}</div>
+                        <div className="text-sm">
+                            {formatTime(range[0])} - {formatTime(range[1])}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    return (
+        <TooltipProvider delayDuration={0}>
+            <Tooltip>
+                <TooltipTrigger className="relative group" style={{ width: `${width}%` }}>
+                    <TimelineBar width={100} barStatus="active" />
+                </TooltipTrigger>
+                <TooltipContent className="p-3 bg-white shadow-none rounded-lg max-w-xs">
+                    <div>{getToolTipText(barDetails)}</div>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+}
+
+function TimelineBar({
+    width,
+    barStatus,
+}: {
+    width: number;
+    barStatus: "active" | "inactive";
+}) {
     if (width === 0) {
         return null;
     }
 
-    const backgroundColor = barStatus === "active" ? "black" : "white";
-    return <div style={{ width: `${width}%`, backgroundColor }} className="h-8 rounded-md"></div>;
+    const barClass =
+        barStatus === "active"
+            ? "bg-[#204a4a] group-hover:bg-blue-600 cursor-pointer"
+            : "bg-white opacity-0";
+    return <div style={{ width: `${width}%` }} className={`h-5 rounded-sm ${barClass}`}></div>;
 }
 
 export default Chart;
