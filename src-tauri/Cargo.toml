@@ -31,4 +31,5 @@ xcb = "1.4.0"
 xcb-wm = { version = "0.4.0", features = ["ewmh", "icccm"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-store = "2"
 

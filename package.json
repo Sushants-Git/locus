@@ -20,6 +20,7 @@
     "@tauri-apps/plugin-dialog": "^2.0.0",
     "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-shell": ">=2.0.0",
+    "@tauri-apps/plugin-store": "^2.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "colorthief": "^2.6.0",
@@ -32,6 +33,7 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8",
     "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {

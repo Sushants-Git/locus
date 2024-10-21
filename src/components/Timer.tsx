@@ -1,6 +1,10 @@
 import NumberFlow from "@number-flow/react";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { useTimerStore } from "../stores/settingStore";
 
 export default function Timer() {
+    const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
+
     let minute = 40;
     let second = 50;
 
@@ -9,8 +13,10 @@ export default function Timer() {
             <div
                 className="text-9xl tabular-nums text-white font-600 m-auto w-fit border rounded-lg px-8 relative group select-none"
                 style={{
-                    backgroundImage:
-                        "linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),url(/background/background.png)",
+                    backgroundImage: backgroundImagePath
+                        ? `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),url(${convertFileSrc(backgroundImagePath)})`
+                        : "linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),url(/background/background.png)",
+
                     backgroundRepeat: "no-repeat",
                     backgroundPosition: "center",
                     backgroundSize: "cover",

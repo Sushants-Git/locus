@@ -12,7 +12,7 @@ import { useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { appConfigDir } from "@tauri-apps/api/path";
-import useTimerStore from "../../stores/timerStore";
+import { useTimerStore } from "../../stores/settingStore";
 import useAlertStore from "../../stores/alertStore";
 
 interface TimerDialogProps {
@@ -80,7 +80,8 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
     const [isImageSelectDialogOpen, setIsImageSelectDialogOpen] = useState(false);
 
     const { showAlert } = useAlertStore();
-    const changeBackgroundImagePath = useTimerStore(state => state.changeBackgroundImagePath);
+
+    const changeBackgroundImagePath = useTimerStore(state => state.setBackgroundImagePath);
 
     const handleSave = async () => {
         if (!selectedImage) {

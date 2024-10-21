@@ -8,19 +8,27 @@ import DottedBackground from "./components/DottedBackground";
 import Alert from "./components/Alert.tsx";
 import Settings from "./components/Settings";
 import useAlertStore from "./stores/alertStore.tsx";
+import { hydrateSettings, useSettingStore } from "./stores/settingStore.tsx";
+import { useEffect } from "react";
 
 function App() {
     const { activeWindow, isStreamRunning, changeStreamStatus } = useWindowTitleStream();
 
+    useEffect(() => {
+        hydrateSettings();
+    }, []);
+
     return (
-        <DottedBackground>
-            <div>
-                <Settings />
-                <Timer />
-                <Chart />
-            </div>
-            <AlertComponent />
-        </DottedBackground>
+        <HydrationGuard>
+            <DottedBackground>
+                <div>
+                    <Settings />
+                    <Timer />
+                    <Chart />
+                </div>
+                <AlertComponent />
+            </DottedBackground>
+        </HydrationGuard>
     );
 
     // return (
@@ -36,9 +44,18 @@ function App() {
     // );
 }
 
+function HydrationGuard({ children }: { children: React.ReactNode }) {
+    const hydrated = useSettingStore(state => state._settingHydrate);
+
+    if (!hydrated) {
+        return null;
+    }
+
+    return <>{children}</>;
+}
+
 function AlertComponent() {
     const alert = useAlertStore(state => state.alert);
-    console.log(alert);
     return alert ? <Alert type={alert.type} message={alert.message} title={alert.title} /> : null;
 }
 

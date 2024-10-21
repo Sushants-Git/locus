@@ -36,7 +36,6 @@ fn save_file(from: String, to: String, target_folder: String) -> Result<String, 
 
     let destination_path = Path::new(&to).join(&target_folder);
 
-
     if !destination_path.exists() {
         fs::create_dir_all(&destination_path)
             .map_err(|e| format!("Unable to create the destination folder: {:?}", e))?;
@@ -60,6 +59,7 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(stream_state)
