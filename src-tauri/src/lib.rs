@@ -4,7 +4,7 @@ mod window_info;
 
 use std::{fs, path::Path, sync::Arc};
 use tauri::{generate_handler, State};
-use tokio::{fs::create_dir, sync::Mutex};
+use tokio::sync::Mutex;
 
 use model::StreamState;
 use utils::stream;

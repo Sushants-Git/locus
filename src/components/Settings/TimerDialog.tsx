@@ -115,20 +115,29 @@ function ColorPalette({
         "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
 
     return (
-        <div className="p-2 bg-gray-100 rounded-lg shadow-sm inline-block">
-            <div className="flex flex-wrap justify-center gap-2">
-                {colors.map((color, index) => {
-                    const hexColor = rgbToHex(...color);
-                    return (
-                        <button
-                            key={index}
-                            className="w-8 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform"
-                            style={{ backgroundColor: hexColor }}
-                            onClick={() => onColorSelect(rgbToHex(...color))}
-                            aria-label={`Select color ${hexColor}`}
-                        />
-                    );
-                })}
+        <div className="flex flex-col gap-4">
+            <div>
+                <div>Choose accent color</div>
+                <div className="text-sm text-muted-foreground">
+                    Accent colors our used for custom styling some components (eg. bars on the
+                    timeline chart)
+                </div>
+            </div>
+            <div className="p-2 bg-gray-100 rounded-lg shadow-sm inline-block">
+                <div className="flex flex-wrap justify-center gap-2">
+                    {colors.map((color, index) => {
+                        const hexColor = rgbToHex(...color);
+                        return (
+                            <button
+                                key={index}
+                                className="w-8 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform"
+                                style={{ backgroundColor: hexColor }}
+                                onClick={() => onColorSelect(rgbToHex(...color))}
+                                aria-label={`Select color ${hexColor}`}
+                            />
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
