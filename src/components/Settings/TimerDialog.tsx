@@ -7,13 +7,18 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { appConfigDir } from "@tauri-apps/api/path";
 import { useTimerStore } from "../../stores/settingStore";
 import useAlertStore from "../../stores/alertStore";
+
+// @ts-ignore
+import ColorThief from "colorthief";
+
+type RGB = [number, number, number];
 
 interface TimerDialogProps {
     activeDialog: string;
@@ -23,7 +28,7 @@ interface TimerDialogProps {
 const ALLOWED_IMAGE_EXTENSIONS = ["png", "jpeg", "jpg", "gif", "svg", "webp", "bmp", "ico"];
 
 const ImagePreview: React.FC<{ imagePath: string }> = ({ imagePath }) => (
-    <div className="border relative rounded-sm">
+    <div className="relative rounded-lg bg-gray-100">
         <img
             src={convertFileSrc(imagePath)}
             className="m-auto max-h-64"
@@ -32,13 +37,37 @@ const ImagePreview: React.FC<{ imagePath: string }> = ({ imagePath }) => (
     </div>
 );
 
+const getColorPalette = (imagePath: string): Promise<RGB[]> => {
+    try {
+        return new Promise((resolve, _) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = convertFileSrc(imagePath);
+
+            const handleImage = () => {
+                const colorThief = new ColorThief();
+                return colorThief.getPalette(img);
+            };
+
+            if (img.complete) {
+                resolve(handleImage());
+            } else {
+                img.addEventListener("load", () => resolve(handleImage()));
+            }
+        });
+    } catch (error) {
+        throw new Error(`Failed to extract color palette: ${error}`);
+    }
+};
+
 const BackgroundImageSelector: React.FC<{
     onImageSelect: (path: string | null) => void;
-    isDialogOpen: boolean;
+    onColorSelect: (color: string) => void;
+    isImageSelectDialogOpen: boolean;
     setIsDialogOpen: (isOpen: boolean) => void;
-}> = ({ onImageSelect, isDialogOpen, setIsDialogOpen }) => {
+}> = ({ onImageSelect, isImageSelectDialogOpen, setIsDialogOpen }) => {
     const handleImageSelect = async () => {
-        if (isDialogOpen) return;
+        if (isImageSelectDialogOpen) return;
 
         setIsDialogOpen(true);
         try {
@@ -75,13 +104,57 @@ const BackgroundImageSelector: React.FC<{
     );
 };
 
+function ColorPalette({
+    colors,
+    onColorSelect,
+}: {
+    colors: RGB[];
+    onColorSelect: (color: string) => void;
+}) {
+    const rgbToHex = (r: number, g: number, b: number) =>
+        "#" + [r, g, b].map(x => x.toString(16).padStart(2, "0")).join("");
+
+    return (
+        <div className="p-2 bg-gray-100 rounded-lg shadow-sm inline-block">
+            <div className="flex flex-wrap justify-center gap-2">
+                {colors.map((color, index) => {
+                    const hexColor = rgbToHex(...color);
+                    return (
+                        <button
+                            key={index}
+                            className="w-8 h-8 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform"
+                            style={{ backgroundColor: hexColor }}
+                            onClick={() => onColorSelect(rgbToHex(...color))}
+                            aria-label={`Select color ${hexColor}`}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 export default function TimerDialog({ activeDialog, handleDialogChange }: TimerDialogProps) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string>();
+    const [colorPalette, setColorPalette] = useState<RGB[]>();
     const [isImageSelectDialogOpen, setIsImageSelectDialogOpen] = useState(false);
+
+    useEffect(() => {
+        const changeColorPalette = async () => {
+            if (selectedImage) {
+                let colorPalette = await getColorPalette(selectedImage);
+                setColorPalette(colorPalette);
+            }
+        };
+
+        changeColorPalette();
+    }, [selectedImage]);
 
     const { showAlert } = useAlertStore();
 
-    const changeBackgroundImagePath = useTimerStore(state => state.setBackgroundImagePath);
+    const { setBackgroundImagePath: changeBackgroundImagePath, setAccentColor: changeAccentColor } =
+        useTimerStore();
 
     const handleSave = async () => {
         if (!selectedImage) {
@@ -97,6 +170,9 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
             });
 
             changeBackgroundImagePath(savedBackgroundImagePath);
+            if (selectedColor) {
+                changeAccentColor(selectedColor);
+            }
             setSelectedImage(null);
         } catch (error) {
             showAlert({
@@ -120,11 +196,15 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
                 <div className="flex flex-col gap-4">
                     <BackgroundImageSelector
                         onImageSelect={setSelectedImage}
-                        isDialogOpen={isImageSelectDialogOpen}
+                        onColorSelect={setSelectedColor}
+                        isImageSelectDialogOpen={isImageSelectDialogOpen}
                         setIsDialogOpen={setIsImageSelectDialogOpen}
                     />
 
                     {selectedImage && <ImagePreview imagePath={selectedImage} />}
+                    {colorPalette && (
+                        <ColorPalette colors={colorPalette} onColorSelect={setSelectedColor} />
+                    )}
                 </div>
 
                 <DialogFooter>

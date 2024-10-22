@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTime } from "../../src/utils/utils";
+import { useTimerStore } from "../stores/settingStore";
 
 type Range = [start: number, end: number];
 
@@ -213,7 +214,7 @@ function TimelineBarWithToolTip({
     return (
         <TooltipProvider delayDuration={0}>
             <Tooltip>
-                <TooltipTrigger className="relative group" style={{ width: `${width}%` }}>
+                <TooltipTrigger className="relative" style={{ width: `${width}%` }}>
                     <TimelineBar width={100} barStatus="active" />
                 </TooltipTrigger>
                 <TooltipContent className="p-3 bg-white shadow-none rounded-lg max-w-xs">
@@ -224,22 +225,51 @@ function TimelineBarWithToolTip({
     );
 }
 
-function TimelineBar({
-    width,
-    barStatus,
-}: {
-    width: number;
-    barStatus: "active" | "inactive";
-}) {
-    if (width === 0) {
-        return null;
-    }
+function TimelineBar({ width, barStatus }: { width: number; barStatus: "active" | "inactive" }) {
+    const accentColor = useTimerStore(state => state.accentColor);
 
-    const barClass =
-        barStatus === "active"
-            ? "bg-[#204a4a] group-hover:bg-blue-600 cursor-pointer"
-            : "bg-white opacity-0";
-    return <div style={{ width: `${width}%` }} className={`h-5 rounded-sm ${barClass}`}></div>;
+    if (width === 0) return null;
+
+    const isActive = barStatus === "active";
+    const defaultColor = "#204a4a";
+    const backgroundColor = isActive ? accentColor || defaultColor : "white";
+
+    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isActive) {
+            e.currentTarget.style.backgroundColor = darkenHexColor(accentColor || defaultColor, 20);
+        }
+    };
+
+    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isActive) {
+            e.currentTarget.style.backgroundColor = backgroundColor;
+        }
+    };
+
+    return (
+        <div
+            style={{ width: `${width}%`, backgroundColor }}
+            className={`h-5 rounded-sm transition-colors duration-100 ${isActive ? "cursor-pointer" : "opacity-0"}`}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        />
+    );
+}
+
+function darkenHexColor(hex: string, percentage: number) {
+    hex = hex.replace(/^#/, "");
+
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+
+    r = Math.max(0, Math.min(255, r - Math.round(r * (percentage / 100))));
+    g = Math.max(0, Math.min(255, g - Math.round(g * (percentage / 100))));
+    b = Math.max(0, Math.min(255, b - Math.round(b * (percentage / 100))));
+
+    const darkenedHex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+
+    return darkenedHex;
 }
 
 export default Chart;
