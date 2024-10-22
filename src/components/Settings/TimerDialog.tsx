@@ -7,6 +7,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 
 import { open } from "@tauri-apps/plugin-dialog";
@@ -119,7 +122,7 @@ function ColorPalette({
             <div>
                 <div>Choose accent color</div>
                 <div className="text-sm text-muted-foreground">
-                    Accent colors our used for custom styling some components (eg. bars on the
+                    Accent colors are used for custom styling some components (eg. bars on the
                     timeline chart)
                 </div>
             </div>
@@ -137,6 +140,31 @@ function ColorPalette({
                             />
                         );
                     })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function TimeValueSelectors() {
+    return (
+        <div className="flex justify-between items-center">
+            <div>
+                <div>Pomodoro Settings</div>
+                <div className="text-sm text-muted-foreground">Customize your sessions</div>
+            </div>
+            <div className="flex flex-col gap-4">
+                <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="sessionLength">Session Length (minutes)</Label>
+                    <Input id="sessionLength" type="number" />
+                </div>
+                <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="breakLength">Break Length (minutes)</Label>
+                    <Input id="breakLength" type="number" />
+                </div>
+                <div className="grid w-full items-center gap-2">
+                    <Label htmlFor="numberOfSessions">Number of Sessions</Label>
+                    <Input id="numberOfSessions" type="number" />
                 </div>
             </div>
         </div>
@@ -202,19 +230,23 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
                     <DialogDescription>Change timer settings</DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-4">
-                    <BackgroundImageSelector
-                        onImageSelect={setSelectedImage}
-                        onColorSelect={setSelectedColor}
-                        isImageSelectDialogOpen={isImageSelectDialogOpen}
-                        setIsDialogOpen={setIsImageSelectDialogOpen}
-                    />
+                <ScrollArea className="max-h-96">
+                    <div className="flex flex-col gap-6 pt-4 pb-4 pr-4">
+                        <BackgroundImageSelector
+                            onImageSelect={setSelectedImage}
+                            onColorSelect={setSelectedColor}
+                            isImageSelectDialogOpen={isImageSelectDialogOpen}
+                            setIsDialogOpen={setIsImageSelectDialogOpen}
+                        />
 
-                    {selectedImage && <ImagePreview imagePath={selectedImage} />}
-                    {colorPalette && (
-                        <ColorPalette colors={colorPalette} onColorSelect={setSelectedColor} />
-                    )}
-                </div>
+                        {selectedImage && <ImagePreview imagePath={selectedImage} />}
+                        {colorPalette && (
+                            <ColorPalette colors={colorPalette} onColorSelect={setSelectedColor} />
+                        )}
+
+                        <TimeValueSelectors />
+                    </div>
+                </ScrollArea>
 
                 <DialogFooter>
                     <Button onClick={handleSave}>Save</Button>
