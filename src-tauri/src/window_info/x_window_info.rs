@@ -31,7 +31,14 @@ fn get_window_name(icccm_conn: &icccm::Connection, window: Window) -> Result<Str
     let request = icccm::GetWmName::new(window);
     let cookie = icccm_conn.send_request(&request);
     let reply = icccm_conn.wait_for_reply(cookie)?;
-    Ok(reply.name)
+    let mut name = String::from(&reply.name);
+
+    let formatted_name_in_bytes = strip_ansi_escapes::strip((&reply.name).as_bytes());
+    if let Ok(formatted_name) = String::from_utf8(formatted_name_in_bytes) {
+        name = formatted_name;
+    } 
+
+    Ok(name)
 }
 
 fn get_window_class(icccm_conn: &icccm::Connection, window: Window) -> Result<String, XError> {
