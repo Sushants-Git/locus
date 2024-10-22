@@ -1,19 +1,18 @@
 import "./App.css";
 
-import { useWindowTitleStream } from "./hooks/useWindowTitleStream";
+import { useEffect } from "react";
+
+import useAlertStore from "./stores/alertStore.tsx";
+import { hydrateSettings, useSettingStore } from "./stores/settingStore.tsx";
 
 import Chart from "./components/Chart.tsx";
 import Timer from "./components/Timer.tsx";
 import DottedBackground from "./components/DottedBackground";
 import Alert from "./components/Alert.tsx";
 import Settings from "./components/Settings";
-import useAlertStore from "./stores/alertStore.tsx";
-import { hydrateSettings, useSettingStore } from "./stores/settingStore.tsx";
-import { useEffect } from "react";
+import Indicator from "./components/Indicator";
 
 function App() {
-    const { activeWindow, isStreamRunning, changeStreamStatus } = useWindowTitleStream();
-
     useEffect(() => {
         hydrateSettings();
     }, []);
@@ -24,24 +23,13 @@ function App() {
                 <div>
                     <Settings />
                     <Timer />
+                    <Indicator />
                     <Chart />
                 </div>
                 <AlertComponent />
             </DottedBackground>
         </HydrationGuard>
     );
-
-    // return (
-    //   <DottedBackground>
-    //     <div className="container">
-    //       <h2>Current Window Title:</h2>
-    //       <p>{activeWindow.title || "No title streaming"}</p>
-    //       <button onClick={changeStreamStatus}>
-    //         {isStreamRunning() ? "Stop Stream" : "Start Stream"}
-    //       </button>
-    //     </div>
-    //   </DottedBackground>
-    // );
 }
 
 function HydrationGuard({ children }: { children: React.ReactNode }) {

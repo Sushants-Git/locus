@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatTime } from "../../src/utils/utils";
 import { useTimerStore } from "../stores/settingStore";
+import { defaults } from "../constants";
 
 type Range = [start: number, end: number];
 
@@ -66,7 +67,7 @@ const Chart = () => {
     ];
 
     return (
-        <div className=" w-screen">
+        <div className="w-screen">
             <div
                 className="w-3/4  m-auto border border-gray-200 py-7 px-6 bg-white rounded-lg"
                 ref={divRef}
@@ -231,7 +232,7 @@ function TimelineBar({ width, barStatus }: { width: number; barStatus: "active" 
     if (width === 0) return null;
 
     const isActive = barStatus === "active";
-    const defaultColor = "#204a4a";
+    const defaultColor = defaults.accentColor;
     const backgroundColor = isActive ? accentColor || defaultColor : "white";
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
