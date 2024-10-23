@@ -1,11 +1,19 @@
+import { Button } from "@/components/ui/button";
+import Firefox from "./firefox.svg?react";
+
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 
 export default function Indicator() {
     const { activeWindow, isStreamRunning, changeStreamStatus } = useWindowTitleStream();
 
-    console.log(activeWindow);
-
-    return null;
+    return (
+        <Button className="rounded-full flex items-center gap-2" onClick={changeStreamStatus}>
+            <div>
+                <Firefox className="text-white h-6 w-6 rounded-full" />
+            </div>
+            <span>{activeWindow.title}</span>
+        </Button>
+    );
 
     return (
         <div>
