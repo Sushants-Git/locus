@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 
 import { open } from "@tauri-apps/plugin-dialog";
@@ -21,6 +22,9 @@ import useAlertStore from "../../stores/alertStore";
 // @ts-ignore
 import ColorThief from "colorthief";
 
+import { convertSeconds } from "../../utils/utils";
+import ImagePreview from "./ImagePreview";
+
 type RGB = [number, number, number];
 
 interface TimerDialogProps {
@@ -29,16 +33,6 @@ interface TimerDialogProps {
 }
 
 const ALLOWED_IMAGE_EXTENSIONS = ["png", "jpeg", "jpg", "gif", "svg", "webp", "bmp", "ico"];
-
-const ImagePreview: React.FC<{ imagePath: string }> = ({ imagePath }) => (
-    <div className="relative rounded-lg bg-gray-100">
-        <img
-            src={convertFileSrc(imagePath)}
-            className="m-auto max-h-64"
-            alt="Selected background"
-        />
-    </div>
-);
 
 const getColorPalette = (imagePath: string): Promise<RGB[]> => {
     try {
@@ -65,7 +59,6 @@ const getColorPalette = (imagePath: string): Promise<RGB[]> => {
 
 const BackgroundImageSelector: React.FC<{
     onImageSelect: (path: string | null) => void;
-    onColorSelect: (color: string) => void;
     isImageSelectDialogOpen: boolean;
     setIsDialogOpen: (isOpen: boolean) => void;
 }> = ({ onImageSelect, isImageSelectDialogOpen, setIsDialogOpen }) => {
@@ -146,7 +139,15 @@ function ColorPalette({
     );
 }
 
-function TimeValueSelectors() {
+function TimeValueSelectors({
+    timeValues,
+    updateTimeValues,
+}: {
+    timeValues: TimeValues;
+    updateTimeValues: (updates: Partial<TimeValues>) => void;
+}) {
+    const { sessionLength, breakLength, numberOfSessions } = timeValues;
+
     return (
         <div className="flex justify-between items-center">
             <div>
@@ -156,61 +157,139 @@ function TimeValueSelectors() {
             <div className="flex flex-col gap-4">
                 <div className="grid w-full items-center gap-2">
                     <Label htmlFor="sessionLength">Session Length (minutes)</Label>
-                    <Input id="sessionLength" type="number" />
+                    <Input
+                        id="sessionLength"
+                        type="number"
+                        value={sessionLength}
+                        min={1}
+                        onChange={e => {
+                            if (Number.isInteger(e.target.valueAsNumber)) {
+                                updateTimeValues({ sessionLength: e.target.valueAsNumber });
+                            }
+                        }}
+                    />
                 </div>
                 <div className="grid w-full items-center gap-2">
                     <Label htmlFor="breakLength">Break Length (minutes)</Label>
-                    <Input id="breakLength" type="number" />
+                    <Input
+                        id="breakLength"
+                        type="number"
+                        value={breakLength}
+                        min={0}
+                        onChange={e => {
+                            if (Number.isInteger(e.target.valueAsNumber)) {
+                                updateTimeValues({ breakLength: e.target.valueAsNumber });
+                            }
+                        }}
+                    />
                 </div>
                 <div className="grid w-full items-center gap-2">
                     <Label htmlFor="numberOfSessions">Number of Sessions</Label>
-                    <Input id="numberOfSessions" type="number" />
+                    <Input
+                        id="numberOfSessions"
+                        type="number"
+                        value={numberOfSessions}
+                        min={1}
+                        onChange={e => {
+                            if (Number.isInteger(e.target.valueAsNumber)) {
+                                updateTimeValues({ numberOfSessions: e.target.valueAsNumber });
+                            }
+                        }}
+                    />
                 </div>
             </div>
         </div>
     );
 }
 
+interface ImageSettings {
+    selectedImage: string | null;
+    selectedColor?: string;
+    colorPalette?: RGB[];
+    isImageSelectDialogOpen: boolean;
+}
+
+interface TimeValues {
+    sessionLength: number;
+    breakLength: number;
+    numberOfSessions: number;
+}
+
 export default function TimerDialog({ activeDialog, handleDialogChange }: TimerDialogProps) {
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [selectedColor, setSelectedColor] = useState<string>();
-    const [colorPalette, setColorPalette] = useState<RGB[]>();
-    const [isImageSelectDialogOpen, setIsImageSelectDialogOpen] = useState(false);
+    const { showAlert } = useAlertStore();
+
+    const [imageSettings, setImageSettings] = useState<ImageSettings>({
+        selectedImage: null,
+        selectedColor: undefined,
+        colorPalette: undefined,
+        isImageSelectDialogOpen: false,
+    });
+
+    const {
+        setBackgroundImagePath,
+        setAccentColor,
+        setTimerSettings,
+
+        sessionLengthInSeconds,
+        breakLengthInSeconds,
+        numberOfSessions,
+    } = useTimerStore();
+
+    const [timeValues, setTimeValues] = useState<TimeValues>({
+        sessionLength: convertSeconds(sessionLengthInSeconds).minutes,
+        breakLength: convertSeconds(breakLengthInSeconds).minutes,
+        numberOfSessions: numberOfSessions,
+    });
+
+    const updateImageSettings = (updates: Partial<ImageSettings>) => {
+        setImageSettings(prev => ({
+            ...prev,
+            ...updates,
+        }));
+    };
+
+    const updateTimeValues = (updates: Partial<TimeValues>) => {
+        setTimeValues(prev => ({
+            ...prev,
+            ...updates,
+        }));
+    };
+
+    const handleSave = async () => {
+        await saveBackgroundImage();
+        saveTimeValues();
+
+        handleDialogChange(false);
+    };
 
     useEffect(() => {
         const changeColorPalette = async () => {
-            if (selectedImage) {
-                let colorPalette = await getColorPalette(selectedImage);
-                setColorPalette(colorPalette);
+            if (imageSettings.selectedImage) {
+                let colorPalette = await getColorPalette(imageSettings.selectedImage);
+                updateImageSettings({ colorPalette });
             }
         };
 
         changeColorPalette();
-    }, [selectedImage]);
+    }, [imageSettings.selectedImage]);
 
-    const { showAlert } = useAlertStore();
-
-    const { setBackgroundImagePath: changeBackgroundImagePath, setAccentColor: changeAccentColor } =
-        useTimerStore();
-
-    const handleSave = async () => {
-        if (!selectedImage) {
-            handleDialogChange(false);
+    const saveBackgroundImage = async () => {
+        if (!imageSettings.selectedImage) {
             return;
         }
 
         try {
             const savedBackgroundImagePath: string = await invoke("save_file", {
-                from: selectedImage,
+                from: imageSettings.selectedImage,
                 to: await appConfigDir(),
                 targetFolder: "timer/background-images",
             });
 
-            changeBackgroundImagePath(savedBackgroundImagePath);
-            if (selectedColor) {
-                changeAccentColor(selectedColor);
+            setBackgroundImagePath(savedBackgroundImagePath);
+            if (imageSettings.selectedColor) {
+                setAccentColor(imageSettings.selectedColor);
             }
-            setSelectedImage(null);
+            updateImageSettings({ selectedImage: null });
         } catch (error) {
             showAlert({
                 type: "error",
@@ -218,8 +297,14 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
                 message: (error as string) || "An unknown error occurred.",
             });
         }
+    };
 
-        handleDialogChange(false);
+    const saveTimeValues = () => {
+        setTimerSettings({
+            sessionLengthInSeconds: timeValues.sessionLength * 60,
+            breakLengthInSeconds: timeValues.breakLength * 60,
+            numberOfSessions: timeValues.numberOfSessions,
+        });
     };
 
     return (
@@ -230,21 +315,38 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
                     <DialogDescription>Change timer settings</DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-96">
-                    <div className="flex flex-col gap-6 pt-4 pb-4 pr-4">
+                <ScrollArea className="max-h-[32rem]">
+                    <div className="flex flex-col gap-7 pr-5">
+                        <Separator />
+
                         <BackgroundImageSelector
-                            onImageSelect={setSelectedImage}
-                            onColorSelect={setSelectedColor}
-                            isImageSelectDialogOpen={isImageSelectDialogOpen}
-                            setIsDialogOpen={setIsImageSelectDialogOpen}
+                            onImageSelect={image => updateImageSettings({ selectedImage: image })}
+                            isImageSelectDialogOpen={imageSettings.isImageSelectDialogOpen}
+                            setIsDialogOpen={open =>
+                                updateImageSettings({ isImageSelectDialogOpen: open })
+                            }
                         />
 
-                        {selectedImage && <ImagePreview imagePath={selectedImage} />}
-                        {colorPalette && (
-                            <ColorPalette colors={colorPalette} onColorSelect={setSelectedColor} />
+                        {imageSettings.selectedImage && (
+                            <ImagePreview imagePath={imageSettings.selectedImage} />
+                        )}
+                        {imageSettings.colorPalette && (
+                            <ColorPalette
+                                colors={imageSettings.colorPalette}
+                                onColorSelect={color =>
+                                    updateImageSettings({ selectedColor: color })
+                                }
+                            />
                         )}
 
-                        <TimeValueSelectors />
+                        <Separator />
+
+                        <TimeValueSelectors
+                            timeValues={timeValues}
+                            updateTimeValues={updateTimeValues}
+                        />
+
+                        <Separator />
                     </div>
                 </ScrollArea>
 

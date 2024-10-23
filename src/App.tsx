@@ -3,7 +3,7 @@ import "./App.css";
 import { useEffect } from "react";
 
 import useAlertStore from "./stores/alertStore.tsx";
-import { hydrateSettings, useSettingStore } from "./stores/settingStore.tsx";
+import { hydrateSettings, useSettingsStore } from "./stores/settingStore.tsx";
 
 import Chart from "./components/Chart.tsx";
 import Timer from "./components/Timer.tsx";
@@ -33,7 +33,7 @@ function App() {
 }
 
 function HydrationGuard({ children }: { children: React.ReactNode }) {
-    const hydrated = useSettingStore(state => state._settingHydrate);
+    const hydrated = useSettingsStore(state => state.isHydrated);
 
     if (!hydrated) {
         return null;

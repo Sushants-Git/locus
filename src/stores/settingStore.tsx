@@ -2,98 +2,112 @@ import { create } from "zustand";
 import { Store } from "@tauri-apps/plugin-store";
 import { z } from "zod";
 
-const store = await Store.load("settings.json", { autoSave: true });
+const timerSettingsSchema = z.object({
+    sessionLengthInSeconds: z
+        .number()
+        .min(1)
+        .default(25 * 60),
+    numberOfSessions: z.number().min(1).default(2),
+    breakLengthInSeconds: z
+        .number()
+        .min(0)
+        .default(5 * 60),
+});
 
-type SettingStoreType = {
-    _settingHydrate: boolean;
-};
+const appearanceSettingsSchema = z.object({
+    backgroundImagePath: z.string().nullable(),
+    accentColor: z.string().nullable(),
+});
 
-type TimerStoreType = {
-    backgroundImagePath: string | null;
-    accentColor: string | null;
+type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
 
+const STORE_NAME = "settings.json";
+const store = await Store.load(STORE_NAME, { autoSave: true });
+
+interface TimerSettings {
     sessionLengthInSeconds: number;
     numberOfSessions: number;
     breakLengthInSeconds: number;
-    // idle: Before starting any session.
-    // running: Timer is actively counting down for a Pomodoro session.
-    // paused: The session is paused.
-    // break: Timer is on a break (either short or long break).
-    // ended: The current Pomodoro session has ended.
-    // completed: The entire Pomodoro session cycle (e.g., 4 sessions) has been finished.
-    timerStatus: "idle" | "running" | "paused" | "break" | "ended" | "completed";
+}
+
+interface TimerState extends TimerSettings {
+    backgroundImagePath: string | null;
+    accentColor: string | null;
+    timerStatus: TimerStatus;
 
     setBackgroundImagePath: (path: string) => Promise<void>;
     setAccentColor: (hex: string) => Promise<void>;
-    setTimerStatus: (status: TimerStoreType["timerStatus"]) => void;
-    setTimerInitials: (time: {
-        sessionLengthInSeconds?: number;
-        numberOfSessions?: number;
-        breakLengthInSeconds?: number;
-    }) => void;
-};
+    setTimerStatus: (status: TimerStatus) => void;
+    setTimerSettings: (settings: Partial<TimerSettings>) => Promise<void>;
+}
 
-const useTimerStore = create<TimerStoreType>()(set => ({
+interface SettingsState {
+    isHydrated: boolean;
+}
+
+export const useTimerStore = create<TimerState>(set => ({
     backgroundImagePath: null,
     accentColor: null,
-
     sessionLengthInSeconds: 25 * 60,
     numberOfSessions: 2,
     breakLengthInSeconds: 5 * 60,
     timerStatus: "idle",
 
-    setBackgroundImagePath: async (path: string) => {
-        set(() => ({ backgroundImagePath: path }));
-        await store.set("timer-background-image-path", path);
+    setBackgroundImagePath: async path => {
+        set({ backgroundImagePath: path });
+        await store.set("timer.backgroundImagePath", path);
     },
-    setAccentColor: async (hex: string) => {
-        set(() => ({ accentColor: hex }));
-        await store.set("timer-accent-color", hex);
+
+    setAccentColor: async hex => {
+        set({ accentColor: hex });
+        await store.set("timer.accentColor", hex);
     },
+
     setTimerStatus: status => {
-        set(() => ({ timerStatus: status }));
+        set({ timerStatus: status });
     },
-    setTimerInitials: time => {
-        set(() => ({ ...time }));
+
+    setTimerSettings: async settings => {
+        set(state => ({
+            ...state,
+            ...settings,
+        }));
+        await store.set("timer.settings", settings);
     },
 }));
 
-const useSettingStore = create<SettingStoreType>()(() => ({
-    _settingHydrate: false,
+export const useSettingsStore = create<SettingsState>()(() => ({
+    isHydrated: false,
 }));
 
-const hydrateSettings = async () => {
-    const backgroundImagePath = z
-        .string()
-        .safeParse(await store.get("timer-background-image-path"));
+export const hydrateSettings = async () => {
+    try {
+        const backgroundImagePath = await store.get("timer.backgroundImagePath");
+        const accentColor = await store.get("timer.accentColor");
 
-    const accentColor = z.string().safeParse(await store.get("timer-accent-color"));
+        const appearanceResult = appearanceSettingsSchema.safeParse({
+            backgroundImagePath,
+            accentColor,
+        });
 
-    const sessionLength = z.number().safeParse(await store.get("timer-session-length"));
-    const numberOfSessions = z.number().safeParse(await store.get("timer-number-of-sessions"));
-    const breakLength = z.number().safeParse(await store.get("timer-break-length"));
+        const savedSettings = await store.get("timer.settings");
+        const timerResult = timerSettingsSchema.safeParse(savedSettings);
 
-    if (backgroundImagePath.success) {
-        useTimerStore.setState({ backgroundImagePath: backgroundImagePath.data });
+        console.log(timerResult);
+
+        if (appearanceResult.success) {
+            useTimerStore.setState({
+                backgroundImagePath: appearanceResult.data.backgroundImagePath,
+                accentColor: appearanceResult.data.accentColor,
+            });
+        }
+
+        if (timerResult.success) {
+            useTimerStore.setState(timerResult.data);
+        }
+
+        useSettingsStore.setState({ isHydrated: true });
+    } catch (error) {
+        console.error("Failed to hydrate settings:", error);
     }
-
-    if (accentColor.success) {
-        useTimerStore.setState({ accentColor: accentColor.data });
-    }
-
-    if (sessionLength.success) {
-        useTimerStore.setState({ sessionLengthInSeconds: sessionLength.data });
-    }
-
-    if (numberOfSessions.success) {
-        useTimerStore.setState({ numberOfSessions: numberOfSessions.data });
-    }
-
-    if (breakLength.success) {
-        useTimerStore.setState({ breakLengthInSeconds: breakLength.data });
-    }
-
-    useSettingStore.setState({ _settingHydrate: true });
 };
-
-export { useTimerStore, useSettingStore, hydrateSettings };

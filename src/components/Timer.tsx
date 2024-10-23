@@ -4,32 +4,27 @@ import { useTimerStore } from "../stores/settingStore";
 import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
 import { useEffect, useState } from "react";
-
-function convertSeconds(totalSeconds: number) {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return { minutes, seconds };
-}
+import { convertSeconds } from "../utils/utils";
 
 export default function Timer() {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
     const accentColor = useTimerStore(state => state.accentColor);
 
     const {
-        sessionLengthInSeconds: sessionLength,
-        breakLengthInSeconds: breakLength,
+        sessionLengthInSeconds,
+        breakLengthInSeconds,
         numberOfSessions,
         timerStatus,
         setTimerStatus,
     } = useTimerStore();
 
-    const [time, setTime] = useState(sessionLength);
+    const [time, setTime] = useState(sessionLengthInSeconds);
     const [currentSession, setCurrentSession] = useState(1);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
 
     const handleReset = () => {
         setTimerStatus("idle");
-        setTime(sessionLength);
+        setTime(sessionLengthInSeconds);
         setCurrentSession(1);
         setCompletedAllSessions(false);
     };
@@ -43,15 +38,21 @@ export default function Timer() {
             setCompletedAllSessions(true);
         } else {
             setTimerStatus("break");
-            setTime(breakLength);
+            setTime(breakLengthInSeconds);
             setCurrentSession(done => done + 1);
         }
     }
 
     if (timerStatus === "break" && time <= 0) {
         setTimerStatus("running");
-        setTime(sessionLength);
+        setTime(sessionLengthInSeconds);
     }
+
+    useEffect(() => {
+        if (timerStatus === "idle") {
+            setTime(sessionLengthInSeconds);
+        }
+    }, [sessionLengthInSeconds]);
 
     useEffect(() => {
         let id = null;
@@ -83,7 +84,7 @@ export default function Timer() {
             >
                 <NumberFlow
                     value={minutes}
-                    format={{ notation: "compact" }}
+                    format={{ notation: "compact", minimumIntegerDigits: 2 }}
                     isolate
                     className="[--number-flow-char-height:0.80em]"
                 />
