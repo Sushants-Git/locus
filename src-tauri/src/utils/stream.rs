@@ -39,7 +39,7 @@ pub async fn stream_title<'r>(app: tauri::AppHandle, stream_state: State<'r, Str
 
                     app.emit_to(EventTarget::app(), "active-window-title", window_info)
                         .unwrap();
-                    sleep(Duration::from_millis(200)).await;
+                    sleep(Duration::from_millis(300)).await;
                 }
             });
         }

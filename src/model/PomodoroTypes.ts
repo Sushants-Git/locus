@@ -1,10 +1,10 @@
 export class ActiveWindow {
     title: string;
-    class: string;
+    windowName: string;
 
-    constructor(title: string, className: string) {
+    constructor(title: string, windowName: string) {
         this.title = title;
-        this.class = className;
+        this.windowName = windowName;
     }
 
     static none(): ActiveWindow {

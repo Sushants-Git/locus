@@ -93,8 +93,6 @@ export const hydrateSettings = async () => {
         const savedSettings = await store.get("timer.settings");
         const timerResult = timerSettingsSchema.safeParse(savedSettings);
 
-        console.log(timerResult);
-
         if (appearanceResult.success) {
             useTimerStore.setState({
                 backgroundImagePath: appearanceResult.data.backgroundImagePath,

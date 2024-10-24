@@ -9,14 +9,22 @@ export function useWindowTitleStream() {
     const [activeWindow, setActiveWindow] = useState(ActiveWindow.none());
     const { streamStatus, changeStreamStatus } = useStreamStore();
 
-    const handleWindowTitleChange = useCallback((event: Event<ActiveWindow>) => {
-        setActiveWindow(event.payload);
-    }, []);
+    const handleWindowTitleChange = useCallback(
+        (event: Event<{ title: string; class: string }>) => {
+            const title = event.payload.title;
+            const windowName = event.payload.class;
+            setActiveWindow(prev => {
+                if (title === prev.title && windowName === prev.windowName) return prev;
+                return new ActiveWindow(title, windowName);
+            });
+        },
+        []
+    );
 
     const startListener = useCallback(async () => {
         try {
             await invoke("stream_title");
-            const unlisten = await listen<ActiveWindow>(
+            const unlisten = await listen<{ title: string; class: string }>(
                 "active-window-title",
                 handleWindowTitleChange
             );
@@ -51,11 +59,15 @@ export function useWindowTitleStream() {
         return () => {
             if (unlisten) {
                 unlisten();
+                setActiveWindow(ActiveWindow.none());
             }
         };
     }, [streamStatus, startListener, stopListener]);
 
-    const isStreamRunning = () => !(streamStatus === "stopped" || streamStatus === "not-started");
+    const isStreamRunning = useCallback(
+        () => !(streamStatus === "stopped" || streamStatus === "not-started"),
+        [streamStatus]
+    );
 
     return { activeWindow, streamStatus, changeStreamStatus, isStreamRunning };
 }

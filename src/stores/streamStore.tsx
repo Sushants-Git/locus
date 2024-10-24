@@ -1,14 +1,20 @@
 import { create } from "zustand";
 
+type streamStatus = "not-started" | "streaming" | "stopped";
+
 interface streamStoreType {
-    streamStatus: "not-started" | "streaming" | "stopped";
-    changeStreamStatus: () => void;
+    streamStatus: streamStatus;
+    changeStreamStatus: (status?: streamStatus) => void;
 }
 
-const useStreamStore = create<streamStoreType>()((set) => ({
+const useStreamStore = create<streamStoreType>()(set => ({
     streamStatus: "not-started",
-    changeStreamStatus: () =>
-        set((state) => {
+    changeStreamStatus: status => {
+        if (status) {
+            set({ streamStatus: status });
+            return;
+        }
+        set(state => {
             switch (state.streamStatus) {
                 case "not-started":
                 case "stopped":
@@ -16,7 +22,8 @@ const useStreamStore = create<streamStoreType>()((set) => ({
                 case "streaming":
                     return { streamStatus: "stopped" };
             }
-        }),
+        });
+    },
 }));
 
 export default useStreamStore;

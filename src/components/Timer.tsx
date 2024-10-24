@@ -5,10 +5,13 @@ import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
 import { useEffect, useState } from "react";
 import { convertSeconds } from "../utils/utils";
+import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 
 export default function Timer() {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
     const accentColor = useTimerStore(state => state.accentColor);
+
+    const { changeStreamStatus } = useWindowTitleStream();
 
     const {
         sessionLengthInSeconds,
@@ -36,7 +39,9 @@ export default function Timer() {
         if (currentSession > numberOfSessions) {
             setTimerStatus("completed");
             setCompletedAllSessions(true);
+            changeStreamStatus("stopped");
         } else {
+            console.log("ran");
             setTimerStatus("break");
             setTime(breakLengthInSeconds);
             setCurrentSession(done => done + 1);
@@ -104,14 +109,20 @@ export default function Timer() {
                                 className="h-4 w-4 cursor-pointer"
                                 fill={iconColor}
                                 stroke={iconColor}
-                                onClick={() => setTimerStatus("running")}
+                                onClick={() => {
+                                    setTimerStatus("running");
+                                    changeStreamStatus("streaming");
+                                }}
                             />
                         ) : (
                             <Pause
                                 className="h-4 w-4 cursor-pointer"
                                 fill={iconColor}
                                 stroke={iconColor}
-                                onClick={() => setTimerStatus("paused")}
+                                onClick={() => {
+                                    setTimerStatus("paused");
+                                    changeStreamStatus("stopped");
+                                }}
                             />
                         )}
                     </div>
@@ -124,7 +135,10 @@ export default function Timer() {
                         <TimerReset
                             className="h-4 w-4 cursor-pointer"
                             stroke={iconColor}
-                            onClick={handleReset}
+                            onClick={() => {
+                                handleReset();
+                                changeStreamStatus("stopped");
+                            }}
                         />
                     </div>
                 )}
