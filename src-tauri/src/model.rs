@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::io;
 use thiserror::Error;
-use xcb::{ConnError, Error};
+use x11rb::errors::{ConnectError, ConnectionError, ReplyError};
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -32,12 +32,22 @@ pub struct StreamState {
 
 #[derive(Error, Debug)]
 pub enum XError {
+    #[error("Connect error: {0}")]
+    ConnectError(#[from] ConnectError),
     #[error("Connection error: {0}")]
-    ConnError(#[from] ConnError),
-    #[error("Reply not received: {0}")]
-    ReplyError(#[from] Error),
-    #[error("Failed to fetch active window")]
-    ActiveWindowError,
+    ConnError(#[from] ConnectionError),
+    #[error("Reply error: {0}")]
+    ReplyError(#[from] ReplyError),
+    #[error("No active window selected")]
+    NoActiveWindow,
+    #[error("Failed to intern atom: {0}")]
+    AtomError(String),
+    #[error("Invalid property format: {0}")]
+    InvalidFormat(String),
+    #[error("Invalid UTF-8 in window property: {0}")]
+    InvalidUtf8(String),
+    #[error("Malformed WM_CLASS property")]
+    MalformedWMClass,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -52,5 +62,11 @@ impl ActiveWindow {
             title: "none".to_string(),
             class: "none".to_string(),
         }
+    }
+}
+
+impl PartialEq for ActiveWindow {
+    fn eq(&self, other: &Self) -> bool {
+        self.class == other.class && self.title == other.title
     }
 }

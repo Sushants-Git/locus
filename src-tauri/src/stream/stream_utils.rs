@@ -5,7 +5,7 @@ use tokio::time::{sleep, Duration};
 
 use crate::{
     model::{ActiveWindow, StreamState},
-    window_info::{hyprland_window_info, x_window_info::get_x_active_window_info},
+    window_info::{hyprland_window_info, x_window_info::stream_x11},
 };
 
 const XDG_SESSION_TYPE: &str = "XDG_SESSION_TYPE";
@@ -25,23 +25,11 @@ pub async fn stream_title<'r>(app: tauri::AppHandle, stream_state: State<'r, Str
     let cancel_flag = stream_state.cancel_flag.clone();
     *cancel_flag.lock().await = false;
 
+    let sleep_duration = Duration::from_millis(300);
+
     match session_type.as_str() {
         "x11" => {
-            tokio::spawn(async move {
-                loop {
-                    if *cancel_flag.lock().await {
-                        break;
-                    }
-                    let window_info = get_x_active_window_info().unwrap_or_else(|error| {
-                        dbg!(error);
-                        ActiveWindow::none()
-                    });
-
-                    app.emit_to(EventTarget::app(), "active-window-title", window_info)
-                        .unwrap();
-                    sleep(Duration::from_millis(300)).await;
-                }
-            });
+            let _ = stream_x11(cancel_flag, app, sleep_duration).map_err(|e| eprintln!("{}", e));
         }
         "wayland" => {
             // TODO: currently this will only works for hyprland

@@ -1,5 +1,5 @@
 mod model;
-mod utils;
+mod stream;
 mod window_info;
 
 use std::{fs, path::Path, sync::Arc};
@@ -7,21 +7,21 @@ use tauri::{generate_handler, State};
 use tokio::sync::Mutex;
 
 use model::StreamState;
-use utils::stream;
+use stream::stream_utils;
 
 #[tauri::command]
 async fn stream_title<'r>(
     app: tauri::AppHandle,
     stream_state: State<'r, StreamState>,
 ) -> Result<(), ()> {
-    stream::stream_title(app, stream_state).await;
+    stream_utils::stream_title(app, stream_state).await;
 
     Ok(())
 }
 
 #[tauri::command]
 async fn stop_stream(stream_state: State<'_, StreamState>) -> Result<(), ()> {
-    stream::stop_stream(stream_state).await;
+    stream_utils::stop_stream(stream_state).await;
 
     Ok(())
 }
