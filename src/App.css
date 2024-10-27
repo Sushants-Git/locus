@@ -5,19 +5,19 @@
 @font-face {
     font-family: "Instrument Sans";
     src: url("/src/assets/fonts/InstrumentSans-VariableFont_wdth,wght.ttf") format("truetype");
-    font-weight: 100 900; /* Variable font supports a range of weights */
-    font-stretch: 75% 125%; /* Adjust according to your font's width support */
+    font-weight: 100 900;
+    font-stretch: 75% 125%;
     font-style: normal;
-    font-display: swap; /* Ensure the text is displayed even if the font takes time to load */
+    font-display: swap;
 }
 
 @font-face {
     font-family: "Bricolage Grotesque";
     src: url("/src/assets/fonts/BricolageGrotesque-VariableFont_opsz,wdth,wght.ttf")
         format("truetype");
-    font-weight: 100 900; /* Adjust this range based on the weights available in the font */
-    font-display: swap; /* Optional: Helps with performance */
-    font-style: normal; /* Adjust this if you have italic styles */
+    font-weight: 100 900;
+    font-display: swap;
+    font-style: normal;
 }
 
 body {

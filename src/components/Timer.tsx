@@ -24,15 +24,10 @@ export default function Timer() {
         }))
     );
 
-
     const [time, setTime] = useState(sessionLengthInSeconds);
     const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
     const [currentSession, setCurrentSession] = useState(0);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
-
-    console.log("ren");
-    console.log(time);
-    console.log(sessionLengthInSeconds);
 
     const handleReset = () => {
         setTimerStatus("idle");
@@ -61,11 +56,12 @@ export default function Timer() {
         }
     }
 
-    // useEffect(() => {
-    //     if (timerStatus === "idle") {
-    //         setTime(sessionLengthInSeconds);
-    //     }
-    // }, [sessionLengthInSeconds, timerStatus]);
+    // change time when user chagnes setting time, only in idle state
+    useEffect(() => {
+        if (timerStatus === "idle") {
+            setTime(sessionLengthInSeconds);
+        }
+    }, [sessionLengthInSeconds, timerStatus]);
 
     useEffect(() => {
         let id = null;
