@@ -11,6 +11,8 @@ import DottedBackground from "./components/DottedBackground";
 import Alert from "./components/Alert.tsx";
 import Settings from "./components/Settings";
 import Indicator from "./components/Indicator";
+import { ThemeProvider } from "@/components/ui/theme-provider.tsx";
+import { ModeToggle } from "@/components/ui/mode-toggle.tsx";
 
 function App() {
     useEffect(() => {
@@ -18,17 +20,22 @@ function App() {
     }, []);
 
     return (
-        <HydrationGuard>
-            <DottedBackground>
-                <div>
-                    <Settings />
-                    <Timer />
-                    <Indicator />
-                    <Chart />
-                </div>
-                <AlertComponent />
-            </DottedBackground>
-        </HydrationGuard>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <HydrationGuard>
+                <DottedBackground>
+                    <div className="h-screen flex flex-col justify-center">
+                        <Settings />
+                        <div className="h-3/4 flex flex-col justify-around">
+                            <Timer />
+                            <Indicator />
+                            <Chart />
+                        </div>
+                        <ModeToggle />
+                    </div>
+                    <AlertComponent />
+                </DottedBackground>
+            </HydrationGuard>
+        </ThemeProvider>
     );
 }
 

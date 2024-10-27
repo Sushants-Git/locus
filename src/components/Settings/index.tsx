@@ -50,7 +50,7 @@ export default function Setting() {
 const SettingsButton = forwardRef((props, forwardRef: ForwardedRef<HTMLButtonElement>) => {
     return (
         <button
-            className="inline-flex items-center justify-center rounded-md transition-colorsring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8 bg-background focus:outline-none"
+            className="inline-flex items-center justify-center rounded-md transition-colorsring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8 bg-background border"
             type="button"
             aria-label="Settings"
             {...props}

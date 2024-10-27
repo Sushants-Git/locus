@@ -4,6 +4,8 @@ import { formatTime } from "../../src/utils/utils";
 import { useTimerStore } from "../stores/settingStore";
 import { defaults } from "../constants";
 
+import { Card, CardContent } from "@/components/ui/card";
+
 type Range = [start: number, end: number];
 
 type TitleRanges = {
@@ -68,11 +70,12 @@ const Chart = () => {
 
     return (
         <div className="w-screen">
-            <div
-                className="w-3/4  m-auto border border-gray-200 py-7 px-6 bg-white rounded-lg"
-                ref={divRef}
-            >
-                <TimelineChart data={data} />
+            <div className="w-3/4 m-auto bg-white dark:bg-zinc-900 rounded-lg" ref={divRef}>
+                <Card>
+                    <CardContent className="py-7 px-6">
+                        <TimelineChart data={data} />
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
@@ -81,7 +84,9 @@ const Chart = () => {
 function TimelineChart({ data }: { data: ActiveWindowDetails[] }) {
     const timelineRows = data.map(session => (
         <div className="flex items-center gap-5" key={session.windowClass}>
-            <div className="w-28 truncate select-none text-sm font-500">{session.windowClass}</div>
+            <div className="w-28 truncate select-none text-sm font-500 dark:font-300">
+                {session.windowClass}
+            </div>
             <TimelineRow titleRanges={session.titleRanges} />
         </div>
     ));
@@ -202,7 +207,7 @@ function TimelineBarWithToolTip({
             <div className="space-y-2">
                 {barDetails.map(({ title, range }) => (
                     <div key={title} className="flex justify-between gap-3 select-none">
-                        <div className="text-sm text-gray-800">{title}</div>
+                        <div className="text-sm">{title}</div>
                         <div className="text-sm">
                             {formatTime(range[0])} - {formatTime(range[1])}
                         </div>
@@ -218,7 +223,7 @@ function TimelineBarWithToolTip({
                 <TooltipTrigger className="relative" style={{ width: `${width}%` }}>
                     <TimelineBar width={100} barStatus="active" />
                 </TooltipTrigger>
-                <TooltipContent className="p-3 bg-white rounded-lg max-w-xs">
+                <TooltipContent className="p-3 rounded-lg max-w-xs">
                     <div>{getToolTipText(barDetails)}</div>
                 </TooltipContent>
             </Tooltip>

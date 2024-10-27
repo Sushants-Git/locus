@@ -13,7 +13,7 @@ export default function Indicator() {
         <TooltipProvider delayDuration={200}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <div className="flex justify-center mb-4 mx-auto items-center w-max">
+                    <div className="flex justify-center mx-auto items-center w-max">
                         <IndicatorButton />
                     </div>
                 </TooltipTrigger>
@@ -40,7 +40,7 @@ const IndicatorButton = () => {
 
     return (
         <Button
-            className="rounded-full flex items-center gap-2 transition-colors duration-300 hover:bg-primary cursor-default"
+            className="rounded-full flex items-center gap-2 transition-colors duration-300 hover:bg-primary cursor-default dark:bg-background border"
             style={{
                 backgroundColor: isStreamRunning() ? accentColor || defaults.accentColor : "",
             }}
@@ -51,7 +51,7 @@ const IndicatorButton = () => {
             <div>
                 <Logo windowName={memoizedWindowName} />
             </div>
-            <span className="max-w-40 truncate">{activeWindow.title}</span>
+            <span className="max-w-40 truncate dark:text-white">{activeWindow.title}</span>
         </Button>
     );
 };

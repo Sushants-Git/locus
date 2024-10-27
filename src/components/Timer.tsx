@@ -90,7 +90,7 @@ export default function Timer() {
     }, [timerStatus, time]);
 
     return (
-        <div className="font-bricolage-grotesque mb-5 mt-5 flex justify-center gap-4 w-screen">
+        <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
             <div
                 className="text-9xl tabular-nums text-white font-600 w-fit border rounded-lg px-8 relative group select-none"
                 style={{
