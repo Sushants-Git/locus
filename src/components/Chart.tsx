@@ -218,7 +218,7 @@ function TimelineBarWithToolTip({
                 <TooltipTrigger className="relative" style={{ width: `${width}%` }}>
                     <TimelineBar width={100} barStatus="active" />
                 </TooltipTrigger>
-                <TooltipContent className="p-3 bg-white shadow-none rounded-lg max-w-xs">
+                <TooltipContent className="p-3 bg-white rounded-lg max-w-xs">
                     <div>{getToolTipText(barDetails)}</div>
                 </TooltipContent>
             </Tooltip>

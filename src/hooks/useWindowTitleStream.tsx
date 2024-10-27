@@ -7,14 +7,15 @@ import useStreamStore from "../stores/streamStore";
 
 export function useWindowTitleStream() {
     const [activeWindow, setActiveWindow] = useState(ActiveWindow.none());
-    const { streamStatus, changeStreamStatus } = useStreamStore();
+    const streamStatus = useStreamStore(state => state.streamStatus);
+    const changeStreamStatus = useStreamStore(state => state.changeStreamStatus);
 
     const handleWindowTitleChange = useCallback(
         (event: Event<{ title: string; class: string }>) => {
             const title = event.payload.title;
             const windowName = event.payload.class;
             setActiveWindow(prev => {
-                if (title === prev.title && windowName === prev.windowName) return prev;
+                if (prev.title === title && prev.windowName === windowName) return prev;
                 return new ActiveWindow(title, windowName);
             });
         },
@@ -23,11 +24,11 @@ export function useWindowTitleStream() {
 
     const startListener = useCallback(async () => {
         try {
-            await invoke("stream_title");
             const unlisten = await listen<{ title: string; class: string }>(
                 "active-window-title",
                 handleWindowTitleChange
             );
+            await invoke("stream_title");
             return unlisten;
         } catch (error) {
             console.error("Failed to start stream or listen to event:", error);
@@ -44,12 +45,13 @@ export function useWindowTitleStream() {
     }, []);
 
     useEffect(() => {
+        let isActive = true;
         let unlisten: UnlistenFn | null = null;
 
         const manageStream = async () => {
-            if (streamStatus === "streaming") {
+            if (streamStatus === "streaming" && isActive) {
                 unlisten = await startListener();
-            } else if (streamStatus === "stopped") {
+            } else if (streamStatus === "stopped" && isActive) {
                 await stopListener();
             }
         };
@@ -57,6 +59,7 @@ export function useWindowTitleStream() {
         manageStream();
 
         return () => {
+            isActive = false;
             if (unlisten) {
                 unlisten();
                 setActiveWindow(ActiveWindow.none());
@@ -65,7 +68,7 @@ export function useWindowTitleStream() {
     }, [streamStatus, startListener, stopListener]);
 
     const isStreamRunning = useCallback(
-        () => !(streamStatus === "stopped" || streamStatus === "not-started"),
+        () => !(streamStatus === "stopped" || streamStatus === "idle"),
         [streamStatus]
     );
 

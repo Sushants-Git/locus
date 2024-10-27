@@ -3,9 +3,12 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useTimerStore } from "../stores/settingStore";
 import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
+import { useShallow } from "zustand/react/shallow";
+
+type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
 
 export default function Timer() {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
@@ -13,13 +16,18 @@ export default function Timer() {
 
     const { changeStreamStatus } = useWindowTitleStream();
 
-    const {
-        sessionLengthInSeconds,
-        breakLengthInSeconds,
-        numberOfSessions,
-        timerStatus,
-        setTimerStatus,
-    } = useTimerStore();
+    const { sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions } = useTimerStore(
+        useShallow(state => ({
+            sessionLengthInSeconds: state.sessionLengthInSeconds,
+            breakLengthInSeconds: state.breakLengthInSeconds,
+            numberOfSessions: state.numberOfSessions,
+            // setTimerStatus: state.setTimerStatus,
+        }))
+    );
+
+    // const timerStatus = useTimerStore(state => state.timerStatus);
+
+    const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
 
     const [time, setTime] = useState(sessionLengthInSeconds);
     const [currentSession, setCurrentSession] = useState(1);
@@ -35,20 +43,19 @@ export default function Timer() {
     let iconColor = accentColor || defaults.accentColor;
     let { minutes, seconds } = convertSeconds(time);
 
-    if (timerStatus === "running" && time <= 0) {
+    function handleSessionCompletion() {
         if (currentSession > numberOfSessions) {
             setTimerStatus("completed");
             setCompletedAllSessions(true);
             changeStreamStatus("stopped");
         } else {
-            console.log("ran");
             setTimerStatus("break");
             setTime(breakLengthInSeconds);
             setCurrentSession(done => done + 1);
         }
     }
 
-    if (timerStatus === "break" && time <= 0) {
+    function handlBreakCompletion() {
         setTimerStatus("running");
         setTime(sessionLengthInSeconds);
     }
@@ -64,7 +71,9 @@ export default function Timer() {
 
         if (timerStatus === "running" || timerStatus === "break") {
             id = setInterval(() => {
-                setTime(time => time - 1);
+                setTime(time => {
+                    return time - 1;
+                });
             }, 1000);
         }
 
@@ -72,6 +81,16 @@ export default function Timer() {
             id && clearInterval(id);
         };
     }, [timerStatus]);
+
+    useEffect(() => {
+        if (time <= 0) {
+            if (timerStatus === "running") {
+                handleSessionCompletion();
+            } else if (timerStatus === "break") {
+                handlBreakCompletion();
+            }
+        }
+    }, [timerStatus, time]);
 
     return (
         <div className="font-bricolage-grotesque mb-5 mt-5 flex justify-center gap-4">

@@ -24,6 +24,7 @@ pub fn stream_x11(
     let utf8_string = get_or_intern_atom(&conn, b"UTF8_STRING")?;
 
     tokio::spawn(async move {
+        let mut old_window_info = ActiveWindow::none();
         loop {
             if *cancel_flag.lock().await {
                 break;
@@ -36,9 +37,13 @@ pub fn stream_x11(
                         ActiveWindow::none()
                     });
 
-            // Stream
-            if let Err(e) = app.emit_to(EventTarget::app(), "active-window-title", window_info) {
-                eprintln!("Error emitting window info: {:?}", e);
+            if window_info != old_window_info {
+                old_window_info = window_info.clone();
+                // Stream
+                if let Err(e) = app.emit_to(EventTarget::app(), "active-window-title", window_info)
+                {
+                    eprintln!("Error emitting window info: {:?}", e);
+                }
             }
             sleep(sleep_duration).await;
         }

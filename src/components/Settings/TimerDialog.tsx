@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
@@ -233,7 +234,17 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
         sessionLengthInSeconds,
         breakLengthInSeconds,
         numberOfSessions,
-    } = useTimerStore();
+    } = useTimerStore(
+        useShallow(state => ({
+            setBackgroundImagePath: state.setBackgroundImagePath,
+            setAccentColor: state.setAccentColor,
+            setTimerSettings: state.setTimerSettings,
+
+            sessionLengthInSeconds: state.sessionLengthInSeconds,
+            breakLengthInSeconds: state.breakLengthInSeconds,
+            numberOfSessions: state.numberOfSessions,
+        }))
+    );
 
     const [timeValues, setTimeValues] = useState<TimeValues>({
         sessionLength: convertSeconds(sessionLengthInSeconds).minutes,

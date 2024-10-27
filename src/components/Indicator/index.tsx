@@ -4,21 +4,23 @@ import { customIconMap, genericIconMap } from "./icon-set";
 import { CircleDashed } from "lucide-react";
 
 import { useWindowTitleStream } from "../../hooks/useWindowTitleStream";
-import { ForwardedRef, forwardRef, memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useTimerStore } from "../../stores/settingStore";
 import { defaults } from "../../constants";
 
 export default function Indicator() {
     return (
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider delayDuration={200}>
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <IndicatorButton />
+                    <div className="flex justify-center mb-4 mx-auto items-center w-max">
+                        <IndicatorButton />
+                    </div>
                 </TooltipTrigger>
-                <TooltipContent className="shadow-none">
+                <TooltipContent className="max-w-xs mb-1">
                     <p>
-                        Start the Pomodoro timer ⏳, and I'll let you know which window you're
-                        hovering over!
+                        This indicator shows the current active window, when the Pomodoro is
+                        running.
                     </p>
                 </TooltipContent>
             </Tooltip>
@@ -26,7 +28,7 @@ export default function Indicator() {
     );
 }
 
-const IndicatorButton = forwardRef((_, forwardRef: ForwardedRef<HTMLButtonElement>) => {
+const IndicatorButton = () => {
     const { activeWindow, isStreamRunning } = useWindowTitleStream();
     const accentColor = useTimerStore(state => state.accentColor);
 
@@ -37,25 +39,22 @@ const IndicatorButton = forwardRef((_, forwardRef: ForwardedRef<HTMLButtonElemen
     }, [windowName]);
 
     return (
-        <div className="flex justify-center mb-4 items-center">
-            <Button
-                className="rounded-full flex items-center gap-2 transition-colors duration-300"
-                style={{
-                    backgroundColor: isStreamRunning() ? accentColor || defaults.accentColor : "",
-                }}
-                ref={forwardRef}
-                // onClick={() => {
-                //     changeStreamStatus();
-                // }}
-            >
-                <div>
-                    <Logo windowName={memoizedWindowName} />
-                </div>
-                <span>{activeWindow.title}</span>
-            </Button>
-        </div>
+        <Button
+            className="rounded-full flex items-center gap-2 transition-colors duration-300 hover:bg-primary cursor-default"
+            style={{
+                backgroundColor: isStreamRunning() ? accentColor || defaults.accentColor : "",
+            }}
+            // onClick={() => {
+            //     changeStreamStatus();
+            // }}
+        >
+            <div>
+                <Logo windowName={memoizedWindowName} />
+            </div>
+            <span>{activeWindow.title}</span>
+        </Button>
     );
-});
+};
 
 const Logo = memo(({ windowName }: { windowName: string }) => {
     let windowNameParts = windowName.split(" ");
