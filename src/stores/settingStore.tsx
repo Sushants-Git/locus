@@ -19,8 +19,6 @@ const appearanceSettingsSchema = z.object({
     accentColor: z.string().nullable(),
 });
 
-type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
-
 const STORE_NAME = "settings.json";
 const store = await Store.load(STORE_NAME, { autoSave: true });
 
@@ -33,11 +31,9 @@ interface TimerSettings {
 interface TimerState extends TimerSettings {
     backgroundImagePath: string | null;
     accentColor: string | null;
-    timerStatus: TimerStatus;
 
     setBackgroundImagePath: (path: string) => Promise<void>;
     setAccentColor: (hex: string) => Promise<void>;
-    setTimerStatus: (status: TimerStatus) => void;
     setTimerSettings: (settings: Partial<TimerSettings>) => Promise<void>;
 }
 
@@ -51,7 +47,6 @@ export const useTimerStore = create<TimerState>(set => ({
     sessionLengthInSeconds: 25 * 60,
     numberOfSessions: 2,
     breakLengthInSeconds: 5 * 60,
-    timerStatus: "idle",
 
     setBackgroundImagePath: async path => {
         set({ backgroundImagePath: path });
@@ -61,10 +56,6 @@ export const useTimerStore = create<TimerState>(set => ({
     setAccentColor: async hex => {
         set({ accentColor: hex });
         await store.set("timer.accentColor", hex);
-    },
-
-    setTimerStatus: status => {
-        set({ timerStatus: status });
     },
 
     setTimerSettings: async settings => {

@@ -51,7 +51,7 @@ const IndicatorButton = () => {
             <div>
                 <Logo windowName={memoizedWindowName} />
             </div>
-            <span>{activeWindow.title}</span>
+            <span className="max-w-40 truncate">{activeWindow.title}</span>
         </Button>
     );
 };

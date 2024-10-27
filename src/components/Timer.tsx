@@ -3,7 +3,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useTimerStore } from "../stores/settingStore";
 import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 import { useShallow } from "zustand/react/shallow";
@@ -21,22 +21,23 @@ export default function Timer() {
             sessionLengthInSeconds: state.sessionLengthInSeconds,
             breakLengthInSeconds: state.breakLengthInSeconds,
             numberOfSessions: state.numberOfSessions,
-            // setTimerStatus: state.setTimerStatus,
         }))
     );
 
-    // const timerStatus = useTimerStore(state => state.timerStatus);
-
-    const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
 
     const [time, setTime] = useState(sessionLengthInSeconds);
-    const [currentSession, setCurrentSession] = useState(1);
+    const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
+    const [currentSession, setCurrentSession] = useState(0);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
+
+    console.log("ren");
+    console.log(time);
+    console.log(sessionLengthInSeconds);
 
     const handleReset = () => {
         setTimerStatus("idle");
         setTime(sessionLengthInSeconds);
-        setCurrentSession(1);
+        setCurrentSession(0);
         setCompletedAllSessions(false);
     };
 
@@ -44,27 +45,27 @@ export default function Timer() {
     let { minutes, seconds } = convertSeconds(time);
 
     function handleSessionCompletion() {
-        if (currentSession > numberOfSessions) {
+        setTimerStatus("break");
+        setTime(breakLengthInSeconds);
+        setCurrentSession(done => done + 1);
+    }
+
+    function handlBreakCompletion() {
+        if (currentSession === numberOfSessions) {
             setTimerStatus("completed");
             setCompletedAllSessions(true);
             changeStreamStatus("stopped");
         } else {
-            setTimerStatus("break");
-            setTime(breakLengthInSeconds);
-            setCurrentSession(done => done + 1);
-        }
-    }
-
-    function handlBreakCompletion() {
-        setTimerStatus("running");
-        setTime(sessionLengthInSeconds);
-    }
-
-    useEffect(() => {
-        if (timerStatus === "idle") {
+            setTimerStatus("running");
             setTime(sessionLengthInSeconds);
         }
-    }, [sessionLengthInSeconds]);
+    }
+
+    // useEffect(() => {
+    //     if (timerStatus === "idle") {
+    //         setTime(sessionLengthInSeconds);
+    //     }
+    // }, [sessionLengthInSeconds, timerStatus]);
 
     useEffect(() => {
         let id = null;
@@ -93,7 +94,7 @@ export default function Timer() {
     }, [timerStatus, time]);
 
     return (
-        <div className="font-bricolage-grotesque mb-5 mt-5 flex justify-center gap-4">
+        <div className="font-bricolage-grotesque mb-5 mt-5 flex justify-center gap-4 w-screen">
             <div
                 className="text-9xl tabular-nums text-white font-600 w-fit border rounded-lg px-8 relative group select-none"
                 style={{
@@ -109,14 +110,14 @@ export default function Timer() {
                 <NumberFlow
                     value={minutes}
                     format={{ notation: "compact", minimumIntegerDigits: 2 }}
-                    isolate
+                    trend={"decreasing"}
                     className="[--number-flow-char-height:0.80em]"
                 />
                 :
                 <NumberFlow
                     value={seconds}
                     format={{ notation: "compact", minimumIntegerDigits: 2 }}
-                    isolate
+                    trend={"decreasing"}
                     className="[--number-flow-char-height:0.80em]"
                 />
             </div>
@@ -146,7 +147,7 @@ export default function Timer() {
                         )}
                     </div>
                 )}
-                <div style={{ color: iconColor }}>
+                <div style={{ color: iconColor }} className="tabular-nums">
                     {currentSession}/{numberOfSessions}
                 </div>
                 {timerStatus !== "idle" && (
