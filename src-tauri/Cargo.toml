@@ -32,3 +32,11 @@ tauri-plugin-fs = "2"
 tauri-plugin-store = "2"
 x11rb = "0.13.1"
 
+[dependencies.uuid]
+version = "1.11.0"
+features = [
+    "v4",                
+    "fast-rng",          
+    "macro-diagnostics", 
+]
+

@@ -5,6 +5,7 @@ mod window_info;
 use std::{fs, path::Path, sync::Arc};
 use tauri::{generate_handler, State};
 use tokio::sync::Mutex;
+use uuid::Uuid;
 
 use model::StreamState;
 use stream::stream_utils;
@@ -30,10 +31,12 @@ async fn stop_stream(stream_state: State<'_, StreamState>) -> Result<(), ()> {
 fn save_file(from: String, to: String, target_folder: String) -> Result<String, String> {
     let source_path = Path::new(&from);
 
-    let file_name = source_path
-        .file_name()
-        .ok_or("Unable to extract the file name")?;
+    let file_extension = source_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .ok_or("Unable to extract file extension")?;
 
+    let unique_file_name = format!("{}.{}", Uuid::new_v4(), file_extension);
     let destination_path = Path::new(&to).join(&target_folder);
 
     if !destination_path.exists() {
@@ -41,7 +44,7 @@ fn save_file(from: String, to: String, target_folder: String) -> Result<String, 
             .map_err(|e| format!("Unable to create the destination folder: {:?}", e))?;
     }
 
-    let destination_file_path = destination_path.join(file_name);
+    let destination_file_path = destination_path.join(unique_file_name);
 
     fs::copy(&source_path, &destination_file_path)
         .map_err(|e| format!("Unable to copy file to destination: {:?}", e))?;
