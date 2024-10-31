@@ -100,8 +100,8 @@ export const hydrateSettings = async () => {
 };
 
 async function hydrateChartSetting() {
-    const savedChartSettings = await store.get("chart.minimumActivityDuration");
-    const chartResults = chartSettingsSchema.safeParse(savedChartSettings);
+    const minimumActivityDuration = await store.get("chart.minimumActivityDuration");
+    const chartResults = chartSettingsSchema.safeParse({ minimumActivityDuration });
 
     if (chartResults.success) {
         useChartStore.setState({
