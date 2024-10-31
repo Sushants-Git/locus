@@ -1,5 +1,5 @@
-import { ForwardedRef, forwardRef, useState } from "react";
-import { Clock, Settings2 } from "lucide-react";
+import { ForwardedRef, forwardRef, memo, useState } from "react";
+import { Clock, Settings2, ChartGantt } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import TimerDialog from "./TimerDialog";
+import ChartDialog from "./ChartDialog";
 
 interface SettingMenuProps {
     children: React.ReactNode;
@@ -18,7 +19,9 @@ interface SettingMenuProps {
     handleDialogOpen: (dialogName: string) => void;
 }
 
-export default function Setting() {
+const MemoizedSetting = memo(Setting);
+
+function Setting() {
     const [open, setOpen] = useState<boolean>(false);
     const [activeDialog, setActiveDialog] = useState<string | null>(null);
 
@@ -42,6 +45,10 @@ export default function Setting() {
 
             {activeDialog === "timer" && (
                 <TimerDialog activeDialog={activeDialog} handleDialogChange={handleDialogChange} />
+            )}
+
+            {activeDialog === "chart" && (
+                <ChartDialog activeDialog={activeDialog} handleDialogChange={handleDialogChange} />
             )}
         </>
     );
@@ -69,12 +76,20 @@ function SettingMenu({ children, open, onOpenChange, handleDialogOpen }: Setting
             <DropdownMenuContent className="w-56" align="end" side="bottom">
                 <DropdownMenuGroup>
                     <DropdownMenuItem onSelect={() => handleDialogOpen("timer")}>
-                        <Clock className="mr-1 h-4 w-4" strokeWidth={1} />
+                        <Clock className="mr-1 h-4 w-4" />
                         <span>Timer</span>
-                        <DropdownMenuShortcut className="font-mono">Ctrl + T</DropdownMenuShortcut>
+                        <DropdownMenuShortcut className="font-mono"></DropdownMenuShortcut>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onSelect={() => handleDialogOpen("chart")}>
+                        <ChartGantt className="mr-1 h-4 w-4" />
+                        <span>Chart</span>
+                        <DropdownMenuShortcut className="font-mono"></DropdownMenuShortcut>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>
     );
 }
+
+export default MemoizedSetting;

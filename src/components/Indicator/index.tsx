@@ -8,7 +8,9 @@ import { memo, useMemo } from "react";
 import { useTimerStore } from "../../stores/settingStore";
 import { defaults } from "../../constants";
 
-export default function Indicator() {
+const MemoizedIndicator = memo(Indicator);
+
+function Indicator() {
     return (
         <TooltipProvider delayDuration={200}>
             <Tooltip>
@@ -74,3 +76,5 @@ const Logo = memo(({ windowName }: { windowName: string }) => {
 
     return <CircleDashed className="text-white h-5 w-5" strokeWidth={1} />;
 });
+
+export default MemoizedIndicator;

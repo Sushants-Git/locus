@@ -36,6 +36,11 @@ pub enum XError {
     ConnectError(#[from] ConnectError),
     #[error("Connection error: {0}")]
     ConnError(#[from] ConnectionError),
+    #[error("Reply error: {original_errror}, custom_message: {custom_message}")]
+    ReplyErrorWithMessage{
+        original_errror: ReplyError,
+        custom_message: &'static str
+    },
     #[error("Reply error: {0}")]
     ReplyError(#[from] ReplyError),
     #[error("No active window selected")]

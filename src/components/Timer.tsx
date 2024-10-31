@@ -1,16 +1,23 @@
 import NumberFlow from "@number-flow/react";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { useTimerStore } from "../stores/settingStore";
+import { useChartStore, useTimerStore } from "../stores/settingStore";
 import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 import { useShallow } from "zustand/react/shallow";
+import { TitleRanges } from "./Chart";
 
 type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
 
-export default function Timer() {
+const MemoizedTimer = memo(Timer);
+
+function Timer({
+    updateChart,
+}: {
+    updateChart: (activeWindowName: string, titleRanges: TitleRanges[]) => void;
+}) {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
     const accentColor = useTimerStore(state => state.accentColor);
 
@@ -24,10 +31,24 @@ export default function Timer() {
         }))
     );
 
+    const { activeWindow } = useWindowTitleStream();
+
     const [time, setTime] = useState(sessionLengthInSeconds);
     const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
     const [currentSession, setCurrentSession] = useState(0);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
+
+    const windowNameChange = useRef({ currentTick: 0, previousTick: 0 });
+    const windowNameRef = useRef({ currentWindow: "none", oldWindow: "none" });
+
+    const titleChange = useRef({ currentTick: 0, previousTick: 0 });
+    const titleRef = useRef({ currentWindow: "none", oldWindow: "none" });
+
+    const titleRangesRef = useRef<TitleRanges[]>([]);
+
+    const minimumActivityDuration = useChartStore(
+        useShallow(state => state.minimumActivityDuration)
+    );
 
     const handleReset = () => {
         setTimerStatus("idle");
@@ -56,7 +77,7 @@ export default function Timer() {
         }
     }
 
-    // change time when user chagnes setting time, only in idle state
+    // change time when user chagnes setting time, only in "idle" state
     useEffect(() => {
         if (timerStatus === "idle") {
             setTime(sessionLengthInSeconds);
@@ -68,6 +89,8 @@ export default function Timer() {
 
         if (timerStatus === "running" || timerStatus === "break") {
             id = setInterval(() => {
+                windowNameChange.current.currentTick += 1;
+                titleChange.current.currentTick += 1;
                 setTime(time => {
                     return time - 1;
                 });
@@ -88,6 +111,64 @@ export default function Timer() {
             }
         }
     }, [timerStatus, time]);
+
+    useEffect(() => {
+        const ignoreTitles = ["Locus", "none"].includes(activeWindow.windowName);
+        const isSameWindow = windowNameRef.current.currentWindow === activeWindow.windowName;
+        const isGreaterThanThreshold =
+            Math.abs(
+                windowNameChange.current.currentTick - windowNameChange.current.previousTick
+            ) >= minimumActivityDuration;
+        const isTickDiff = titleChange.current.previousTick !== titleChange.current.currentTick;
+
+        const flushTitleRanges = () => {
+            // console.log(JSON.stringify(titleRangesRef.current));
+            // console.log("flushed");
+            windowNameChange.current.previousTick = windowNameChange.current.currentTick;
+            titleRangesRef.current = [];
+        };
+
+        const addTitleRange = () => {
+            const titleRangeForCurrentWindow = titleRangesRef.current;
+            const lastRange = titleRangeForCurrentWindow.at(-1);
+
+            if (
+                titleRangeForCurrentWindow.length === 0 ||
+                lastRange?.title !== activeWindow.title
+            ) {
+                titleRangeForCurrentWindow.push({
+                    title: activeWindow.title,
+                    range: [titleChange.current.currentTick - 1, titleChange.current.currentTick],
+                });
+            } else if (lastRange?.range[1] === titleChange.current.currentTick - 1) {
+                lastRange.range[1] = titleChange.current.currentTick;
+            }
+
+            titleChange.current.previousTick = titleChange.current.currentTick;
+        };
+
+        const updateAndResetRanges = () => {
+            updateChart(activeWindow.windowName, titleRangesRef.current);
+            // console.log(JSON.stringify(titleRangesRef.current));
+            // console.log("added");
+            titleRangesRef.current = [];
+        };
+
+        if (timerStatus === "running" && isGreaterThanThreshold && isSameWindow && !ignoreTitles) {
+            updateAndResetRanges();
+        }
+
+        if (!isSameWindow) {
+            flushTitleRanges();
+        }
+
+        if (isTickDiff) {
+            addTitleRange();
+        }
+
+        windowNameRef.current.currentWindow = activeWindow.windowName;
+    }, [timerStatus, activeWindow, minimumActivityDuration, time]);
+    // Intentionally includes time to trigger on time changes, will be removed when a better alternative is found
 
     return (
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
@@ -162,3 +243,5 @@ export default function Timer() {
         </div>
     );
 }
+
+export default MemoizedTimer;

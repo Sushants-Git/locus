@@ -1,72 +1,35 @@
-import { useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatTime } from "../../src/utils/utils";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { timeDiff } from "../../src/utils/utils";
 import { useTimerStore } from "../stores/settingStore";
 import { defaults } from "../constants";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { SessionHistory } from "../model/SessionHistory";
+import { useShallow } from "zustand/react/shallow";
+import { ChevronRight } from "lucide-react";
 
 type Range = [start: number, end: number];
 
-type TitleRanges = {
+export type TitleRanges = {
     title: string;
     range: Range;
 };
 
-type ActiveWindowDetails = {
-    windowClass: string;
-    titleRanges: TitleRanges[];
-};
+export default function Chart({ chart }: { chart: SessionHistory }) {
+    return <>{chart.chartData && <ChartGenerator data={chart.chartData} />}</>;
+}
 
-const Chart = () => {
+const ChartGenerator = ({ data }: { data: Map<string, TitleRanges[]> }) => {
     const divRef = useRef<HTMLDivElement | null>(null);
-
-    const data: ActiveWindowDetails[] = [
-        {
-            windowClass: "Visual Studio Code",
-            titleRanges: [
-                { title: "Writing TypeScript", range: [0, 20] },
-                { title: "Debugging JavaScript", range: [40, 50] },
-                { title: "Code review", range: [70, 90] },
-            ],
-        },
-        {
-            windowClass: "Google Chrome",
-            titleRanges: [
-                { title: "Reading documentation", range: [20, 30] },
-                { title: "Stack Overflow browsing", range: [30, 40] },
-                { title: "Watching tutorial videos", range: [90, 120] },
-            ],
-        },
-        {
-            windowClass: "Slack",
-            titleRanges: [
-                { title: "Team chat", range: [120, 135] },
-                { title: "Reviewing files", range: [135, 149] },
-                { title: "Updating project status", range: [150, 160] },
-            ],
-        },
-        {
-            windowClass: "Spotify",
-            titleRanges: [{ title: "Listening to Lo-fi playlist", range: [160, 180] }],
-        },
-        {
-            windowClass: "Terminal",
-            titleRanges: [
-                { title: "Running Git commands", range: [180, 195] },
-                { title: "NPM package installation", range: [195, 205] },
-                { title: "Checking logs", range: [205, 210] },
-            ],
-        },
-        {
-            windowClass: "Figma",
-            titleRanges: [
-                { title: "Designing UI components", range: [210, 225] },
-                { title: "Collaborating on wireframes", range: [225, 240] },
-                { title: "Feedback session", range: [240, 260] },
-            ],
-        },
-    ];
 
     return (
         <div className="w-screen">
@@ -81,29 +44,24 @@ const Chart = () => {
     );
 };
 
-function TimelineChart({ data }: { data: ActiveWindowDetails[] }) {
-    const timelineRows = data.map(session => (
-        <div className="flex items-center gap-5" key={session.windowClass}>
+function TimelineChart({ data }: { data: Map<string, TitleRanges[]> }) {
+    const timelineRows = Array.from(data).map(([windowClass, titleRanges]) => (
+        <div className="flex items-center gap-5" key={windowClass}>
             <div className="w-28 truncate select-none text-sm font-500 dark:font-300">
-                {session.windowClass}
+                {windowClass.charAt(0).toUpperCase() + windowClass.slice(1)}
             </div>
-            <TimelineRow titleRanges={session.titleRanges} />
+            <TimelineRow titleRanges={titleRanges} />
         </div>
     ));
 
-    return <div className="flex flex-col gap-4">{timelineRows}</div>;
+    return (
+        <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">{timelineRows}</div>
+        </div>
+    );
 }
 
 function TimelineRow({ titleRanges }: { titleRanges: TitleRanges[] }) {
-    // function to check timeBars : replace timeBars() with timeBarss
-    // const timeBarss = titleRanges.map((subSession, index) => (
-    //     <TimelineRangeBars
-    //         previousRange={titleRanges[index - 1]?.range}
-    //         currentRange={subSession.range}
-    //         key={subSession.title}
-    //     />
-    // ));
-
     const timeBars = () => {
         const timeBars = [];
         let i = 0;
@@ -152,8 +110,19 @@ function TimelineRangeBars({
     currentRange: Range;
     barDetails: TitleRanges[];
 }) {
+    const { sessionLengthInSeconds, numberOfSessions, breakLengthInSeconds } = useTimerStore(
+        useShallow(state => ({
+            sessionLengthInSeconds: state.sessionLengthInSeconds,
+            numberOfSessions: state.numberOfSessions,
+            breakLengthInSeconds: state.breakLengthInSeconds,
+        }))
+    );
+
+    let totalLength =
+        sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+
     const calculateBarWidth = (range: Range) => {
-        return (rangeDifference(range) / 260) * 100;
+        return (rangeDifference(range) / totalLength) * 100;
     };
 
     const rangeDifference = (range: Range) => {
@@ -195,41 +164,83 @@ function TimelineRangeBars({
     );
 }
 
-function TimelineBarWithToolTip({
+const TimelineBarWithToolTip = ({
     width,
     barDetails,
 }: {
     width: number;
     barDetails: TitleRanges[];
-}) {
-    const getToolTipText = (barDetails: TitleRanges[]) => {
-        return (
-            <div className="space-y-2">
-                {barDetails.map(({ title, range }) => (
-                    <div key={title} className="flex justify-between gap-3 select-none">
-                        <div className="text-sm">{title}</div>
-                        <div className="text-sm">
-                            {formatTime(range[0])} - {formatTime(range[1])}
-                        </div>
-                    </div>
-                ))}
+}) => {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const ToolTipItem = ({ title, range }: { title: string; range: Range }) => (
+        <div className="flex justify-between gap-6 select-text">
+            <div className="text-sm truncate max-w-56">{title}</div>
+            <div className="text-sm tabular-nums font-bricolage-grotesque">
+                {timeDiff(range[0], range[1])}
             </div>
-        );
-    };
+        </div>
+    );
+
+    const toolTipContent = useMemo(
+        () => (
+            <div className="flex flex-col space-y-1">
+                {barDetails.slice(0, 3).map(({ title, range }, index) => (
+                    <ToolTipItem key={index} title={title} range={range} />
+                ))}
+                {barDetails.length > 3 && (
+                    <button
+                        key="show-more"
+                        className="flex items-center text-sm text-muted-foreground hover:text-primary mt-2 w-full"
+                        onClick={e => {
+                            e.stopPropagation();
+                            setIsDialogOpen(true);
+                        }}
+                    >
+                        <span>Show {barDetails.length - 3} more items</span>
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                    </button>
+                )}
+            </div>
+        ),
+        [barDetails]
+    );
+
+    const allDetailsContent = useMemo(
+        () =>
+            barDetails.map(({ title, range }, index) => (
+                <ToolTipItem key={index} title={title} range={range} />
+            )),
+        [barDetails]
+    );
 
     return (
-        <TooltipProvider delayDuration={0}>
-            <Tooltip>
-                <TooltipTrigger className="relative" style={{ width: `${width}%` }}>
-                    <TimelineBar width={100} barStatus="active" />
-                </TooltipTrigger>
-                <TooltipContent className="p-3 rounded-lg max-w-xs">
-                    <div>{getToolTipText(barDetails)}</div>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+        <>
+            <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                    <TooltipTrigger className="relative" style={{ width: `${width}%` }}>
+                        <TimelineBar width={100} barStatus="active" />
+                    </TooltipTrigger>
+                    <TooltipContent className="p-3 rounded-lg max-w-xs">
+                        {toolTipContent}
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Timeline Details</DialogTitle>
+                        <DialogDescription>Shows timeline details</DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-72 rounded-md p-4 border">
+                        <div className="space-y-2">{allDetailsContent}</div>
+                    </ScrollArea>
+                </DialogContent>
+            </Dialog>
+        </>
     );
-}
+};
 
 function TimelineBar({ width, barStatus }: { width: number; barStatus: "active" | "inactive" }) {
     const accentColor = useTimerStore(state => state.accentColor);
@@ -277,5 +288,3 @@ function darkenHexColor(hex: string, percentage: number) {
 
     return darkenedHex;
 }
-
-export default Chart;
