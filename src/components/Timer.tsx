@@ -7,7 +7,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 import { useShallow } from "zustand/react/shallow";
-import { TitleRanges } from "./Chart";
+import { TitleRanges } from "src/model/SessionHistory";
 
 type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
 
@@ -15,8 +15,10 @@ const MemoizedTimer = memo(Timer);
 
 function Timer({
     updateChart,
+    adjustChart,
 }: {
     updateChart: (activeWindowName: string, titleRanges: TitleRanges[]) => void;
+    adjustChart: (totalPomodoro: number) => void;
 }) {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
     const accentColor = useTimerStore(state => state.accentColor);
@@ -52,6 +54,8 @@ function Timer({
         setTime(sessionLengthInSeconds);
         setCurrentSession(0);
         setCompletedAllSessions(false);
+
+        changeStreamStatus("stopped");
     };
 
     let iconColor = accentColor || defaults.accentColor;
@@ -163,6 +167,13 @@ function Timer({
     }, [timerStatus, activeWindow, minimumActivityDuration, time]);
     // Intentionally includes time to trigger on time changes, will be removed when a better alternative is found
 
+    useEffect(() => {
+        const totalPomodoro =
+            sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+
+        adjustChart(totalPomodoro);
+    }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions]);
+
     return (
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
             <div
@@ -227,7 +238,6 @@ function Timer({
                             stroke={iconColor}
                             onClick={() => {
                                 handleReset();
-                                changeStreamStatus("stopped");
                             }}
                         />
                     </div>

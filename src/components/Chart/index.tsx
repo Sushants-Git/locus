@@ -21,11 +21,6 @@ import { Label } from "@/components/ui/label";
 import MinimumActivityDuration from "./MinimumActivityDuration";
 
 export default function Chart({ chart }: { chart: SessionHistory }) {
-    // const count = useRef(0);
-
-    // console.log(count.current);
-    // count.current += 1;
-
     return <>{chart.chartData && <ChartGenerator data={chart.chartData} />}</>;
 }
 
@@ -183,7 +178,9 @@ const TimelineBarWithToolTip = ({
     const ToolTipItem = ({ title, rangeDiff }: { title: string; rangeDiff: string }) => (
         <div className="flex justify-between gap-6 select-text">
             <div className="text-sm truncate max-w-56">{title}</div>
-            <div className="text-sm flex-shrink-0 tabular-nums text-muted-foreground">{rangeDiff}</div>
+            <div className="text-sm flex-shrink-0 tabular-nums text-muted-foreground">
+                {rangeDiff}
+            </div>
         </div>
     );
 

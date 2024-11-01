@@ -1,12 +1,12 @@
 import "./App.css";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import useAlertStore from "./stores/alertStore.tsx";
 import { hydrateSettings, useSettingsStore, useTimerStore } from "./stores/settingStore.tsx";
 
-import Chart, { TitleRanges } from "./components/Chart";
+import Chart from "./components/Chart";
 import Timer from "./components/Timer.tsx";
 import DottedBackground from "./components/DottedBackground";
 import Alert from "./components/Alert.tsx";
@@ -15,7 +15,7 @@ import Indicator from "./components/Indicator";
 import ModeToggle from "@/components/ui/mode-toggle.tsx";
 import { ThemeProvider } from "@/components/ui/theme-provider.tsx";
 
-import { SessionHistory } from "./model/SessionHistory.ts";
+import { SessionHistory, TitleRanges } from "./model/SessionHistory.ts";
 import { ActiveWindow } from "./model/PomodoroTypes.ts";
 
 function App() {
@@ -30,6 +30,7 @@ function App() {
             breakLengthInSeconds: state.breakLengthInSeconds,
         }))
     );
+
     const [chart, setChart] = useState(() => {
         const totalPomodoro =
             sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
@@ -37,7 +38,17 @@ function App() {
         return new SessionHistory(totalPomodoro, new Date());
     });
 
-    const updateChart = (activeWindowName: string, titleRanges: TitleRanges[]) => {
+    const adjustChart = useCallback((totalPomodoro: number) => {
+        setChart(prev => {
+            const updateChart = new SessionHistory(totalPomodoro, prev.sessionStartedOn, prev.id);
+
+            updateChart.chartData = prev.chartData;
+
+            return updateChart;
+        });
+    }, []);
+
+    const updateChart = useCallback((activeWindowName: string, titleRanges: TitleRanges[]) => {
         setChart(prev => {
             const updateChart = new SessionHistory(
                 prev.pomodoroLengthInSeconds,
@@ -53,7 +64,7 @@ function App() {
 
             return updateChart;
         });
-    };
+    }, []);
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -62,7 +73,7 @@ function App() {
                     <div className="h-screen flex flex-col justify-center">
                         <Settings />
                         <div className="h-3/4 flex flex-col gap-16 justify-center">
-                            <Timer updateChart={updateChart} />
+                            <Timer updateChart={updateChart} adjustChart={adjustChart} />
                             <Indicator />
                             <Chart chart={chart} />
                         </div>

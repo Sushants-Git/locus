@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Store } from "@tauri-apps/plugin-store";
 import { z } from "zod";
+import { defaults } from "../constants";
 
 const timerSettingsSchema = z.object({
     sessionLengthInSeconds: z
@@ -77,7 +78,7 @@ interface ChartState {
 }
 
 export const useChartStore = create<ChartState>(set => ({
-    minimumActivityDuration: 30,
+    minimumActivityDuration: defaults.minimumActivityDuration,
     setMinimumActivityDuration: async (duration: number) => {
         set({ minimumActivityDuration: duration });
         await store.set("chart.minimumActivityDuration", duration);
