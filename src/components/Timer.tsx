@@ -40,10 +40,7 @@ function Timer({
 
     const windowNameChange = useRef({ currentTick: 0, previousTick: 0 });
     const windowNameRef = useRef({ currentWindow: "none", oldWindow: "none" });
-
     const titleChange = useRef({ currentTick: 0, previousTick: 0 });
-    const titleRef = useRef({ currentWindow: "none", oldWindow: "none" });
-
     const titleRangesRef = useRef<TitleRanges[]>([]);
 
     const minimumActivityDuration = useChartStore(
@@ -113,7 +110,7 @@ function Timer({
     }, [timerStatus, time]);
 
     useEffect(() => {
-        const ignoreTitles = ["Locus", "none"].includes(activeWindow.windowName);
+        const ignoreTitles = ["none"].includes(activeWindow.windowName);
         const isSameWindow = windowNameRef.current.currentWindow === activeWindow.windowName;
         const isGreaterThanThreshold =
             Math.abs(
@@ -122,8 +119,6 @@ function Timer({
         const isTickDiff = titleChange.current.previousTick !== titleChange.current.currentTick;
 
         const flushTitleRanges = () => {
-            // console.log(JSON.stringify(titleRangesRef.current));
-            // console.log("flushed");
             windowNameChange.current.previousTick = windowNameChange.current.currentTick;
             titleRangesRef.current = [];
         };
@@ -149,8 +144,6 @@ function Timer({
 
         const updateAndResetRanges = () => {
             updateChart(activeWindow.windowName, titleRangesRef.current);
-            // console.log(JSON.stringify(titleRangesRef.current));
-            // console.log("added");
             titleRangesRef.current = [];
         };
 
@@ -164,7 +157,7 @@ function Timer({
 
         if (isTickDiff) {
             addTitleRange();
-        }
+        } // effect gets triggered on activeWindow, `isTickDiff` makes sure that it does not `addTitleRange` on the same second
 
         windowNameRef.current.currentWindow = activeWindow.windowName;
     }, [timerStatus, activeWindow, minimumActivityDuration, time]);

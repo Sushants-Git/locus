@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export type Range = [start: number, end: number];
 
-type TitleRanges = {
+export type TitleRanges = {
     title: string;
     range: Range;
 };

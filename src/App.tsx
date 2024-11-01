@@ -6,7 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 import useAlertStore from "./stores/alertStore.tsx";
 import { hydrateSettings, useSettingsStore, useTimerStore } from "./stores/settingStore.tsx";
 
-import Chart, { TitleRanges } from "./components/Chart.tsx";
+import Chart, { TitleRanges } from "./components/Chart";
 import Timer from "./components/Timer.tsx";
 import DottedBackground from "./components/DottedBackground";
 import Alert from "./components/Alert.tsx";
@@ -61,7 +61,7 @@ function App() {
                 <DottedBackground>
                     <div className="h-screen flex flex-col justify-center">
                         <Settings />
-                        <div className="h-3/4 flex flex-col justify-around gap-4">
+                        <div className="h-3/4 flex flex-col gap-16 justify-center">
                             <Timer updateChart={updateChart} />
                             <Indicator />
                             <Chart chart={chart} />
