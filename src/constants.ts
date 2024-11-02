@@ -1,6 +1,6 @@
 const defaults = {
-    accentColor: "#204a4a",
-    backgroundImagePath: "/background/background.png",
+    accentColor: "#F1C057",
+    backgroundImagePath: "/background/zen.gif",
     minimumActivityDuration: 15
 };
 
