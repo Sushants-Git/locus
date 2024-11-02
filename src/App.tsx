@@ -75,7 +75,7 @@ function App() {
     const resetChart = useCallback(() => {
         addToChartHistory(chart);
 
-        setChart(prev => {
+        setChart(() => {
             const totalPomodoro =
                 sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
 

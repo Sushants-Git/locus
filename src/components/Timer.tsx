@@ -42,6 +42,10 @@ function Timer({
     const [currentSession, setCurrentSession] = useState(0);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
 
+    if(completedAllSessions){
+        // TODO: reminder to add a message on session completion
+    }
+
     const windowNameChange = useRef({ currentTick: 0, previousTick: 0 });
     const windowNameRef = useRef({ currentWindow: "none", oldWindow: "none" });
     const titleChange = useRef({ currentTick: 0, previousTick: 0 });
