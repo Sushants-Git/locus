@@ -19,10 +19,6 @@ Unlike traditional Pomodoro timers, Locus automatically tracks your active windo
 - **Customizable Thresholds**: Set minimum focus durations to filter out brief distractions
 - **Resource Efficient**: Uses minimal system resources by only reading window title information
 
-### Timeline Data
-![image 38(1)](https://github.com/user-attachments/assets/9ea1aa8f-8a4f-409f-a538-b41dd3d82f85)
-![image](https://github.com/user-attachments/assets/d939cb98-0a5f-4a46-9d9b-c48c311a964d)
-
 ### Privacy & Transparency
 - Zero external data transmission
 - Works offline
@@ -30,8 +26,11 @@ Unlike traditional Pomodoro timers, Locus automatically tracks your active windo
 - Only reads window title information, nothing more
 
 ## Screenshots
+![No activity](https://github.com/user-attachments/assets/9feddb1e-859f-4e43-9881-12c87a8fadd7)
+![Running Pomodoro](https://github.com/user-attachments/assets/534b5da4-aa75-458b-8182-e1c6092f60ee)
 ![Timeline View](https://github.com/user-attachments/assets/9ea1aa8f-8a4f-409f-a538-b41dd3d82f85)
 ![Activity Analysis](https://github.com/user-attachments/assets/d939cb98-0a5f-4a46-9d9b-c48c311a964d)
+
 
 ## System Requirements
 Currently available for Linux distributions running X11.
