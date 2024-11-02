@@ -89,9 +89,9 @@ const BackgroundImageSelector: React.FC<{
     return (
         <div className="flex justify-between items-center gap-7">
             <div>
-                <div>Background Image</div>
+                <div>Custom Background</div>
                 <div className="text-sm text-muted-foreground">
-                    Choose the background image used for the timer background
+                    Support for both static images and animated GIFs
                 </div>
             </div>
             <Button variant="outline" onClick={handleImageSelect}>

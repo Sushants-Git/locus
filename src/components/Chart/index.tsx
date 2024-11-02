@@ -19,9 +19,12 @@ import { ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import MinimumActivityDuration from "./MinimumActivityDuration";
+import { ChartPlaceholder } from "./ChartPlaceholder";
 
 export default function Chart({ chart }: { chart: SessionHistory }) {
-    return <>{chart.chartData && <ChartGenerator data={chart.chartData} />}</>;
+    return (
+        <>{chart.chartData ? <ChartGenerator data={chart.chartData} /> : <ChartPlaceholder />}</>
+    );
 }
 
 const ChartGenerator = ({ data }: { data: Map<string, TitleRanges[]> }) => {

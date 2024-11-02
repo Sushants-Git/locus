@@ -86,6 +86,13 @@ function Timer({
     }, [sessionLengthInSeconds, timerStatus]);
 
     useEffect(() => {
+        const totalPomodoro =
+            sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+
+        adjustChart(totalPomodoro);
+    }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions]);
+
+    useEffect(() => {
         let id = null;
 
         if (timerStatus === "running" || timerStatus === "break") {
@@ -166,13 +173,6 @@ function Timer({
         windowNameRef.current.currentWindow = activeWindow.windowName;
     }, [timerStatus, activeWindow, minimumActivityDuration, time]);
     // Intentionally includes time to trigger on time changes, will be removed when a better alternative is found
-
-    useEffect(() => {
-        const totalPomodoro =
-            sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
-
-        adjustChart(totalPomodoro);
-    }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions]);
 
     return (
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
