@@ -3,7 +3,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { useChartStore, useTimerStore } from "../stores/settingStore";
 import { Play, Pause, TimerReset } from "lucide-react";
 import { defaults } from "../constants";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 import { useShallow } from "zustand/react/shallow";
@@ -16,9 +16,11 @@ const MemoizedTimer = memo(Timer);
 function Timer({
     updateChart,
     adjustChart,
+    resetChart,
 }: {
     updateChart: (activeWindowName: string, titleRanges: TitleRanges[]) => void;
     adjustChart: (totalPomodoro: number) => void;
+    resetChart: () => void;
 }) {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
     const accentColor = useTimerStore(state => state.accentColor);
@@ -49,25 +51,34 @@ function Timer({
         useShallow(state => state.minimumActivityDuration)
     );
 
+    const resetRef = () => {
+        windowNameChange.current = { currentTick: 0, previousTick: 0 };
+        windowNameRef.current = { currentWindow: "none", oldWindow: "none" };
+        titleChange.current = { currentTick: 0, previousTick: 0 };
+        titleRangesRef.current = [];
+    };
+
     const handleReset = () => {
-        setTimerStatus("idle");
         setTime(sessionLengthInSeconds);
+        setTimerStatus("idle");
         setCurrentSession(0);
         setCompletedAllSessions(false);
 
+        resetChart();
+        resetRef();
         changeStreamStatus("stopped");
     };
 
     let iconColor = accentColor || defaults.accentColor;
     let { minutes, seconds } = convertSeconds(time);
 
-    function handleSessionCompletion() {
+    const handleSessionCompletion = useCallback(() => {
         setTimerStatus("break");
         setTime(breakLengthInSeconds);
         setCurrentSession(done => done + 1);
-    }
+    }, [breakLengthInSeconds]);
 
-    function handlBreakCompletion() {
+    const handlBreakCompletion = useCallback(() => {
         if (currentSession === numberOfSessions) {
             setTimerStatus("completed");
             setCompletedAllSessions(true);
@@ -76,7 +87,7 @@ function Timer({
             setTimerStatus("running");
             setTime(sessionLengthInSeconds);
         }
-    }
+    }, [currentSession, numberOfSessions, sessionLengthInSeconds, changeStreamStatus]);
 
     // change time when user chagnes setting time, only in "idle" state
     useEffect(() => {
@@ -90,7 +101,7 @@ function Timer({
             sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
 
         adjustChart(totalPomodoro);
-    }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions]);
+    }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions, adjustChart]);
 
     useEffect(() => {
         let id = null;
@@ -118,7 +129,7 @@ function Timer({
                 handlBreakCompletion();
             }
         }
-    }, [timerStatus, time]);
+    }, [timerStatus, time, handleSessionCompletion, handlBreakCompletion]);
 
     useEffect(() => {
         const ignoreTitles = ["none"].includes(activeWindow.windowName);
@@ -236,9 +247,7 @@ function Timer({
                         <TimerReset
                             className="h-4 w-4 cursor-pointer"
                             stroke={iconColor}
-                            onClick={() => {
-                                handleReset();
-                            }}
+                            onClick={handleReset}
                         />
                     </div>
                 )}

@@ -4,30 +4,161 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { timeDiff } from "../../../src/utils/utils";
-import { useTimerStore } from "../../stores/settingStore";
+import { useChartStore, useTimerStore } from "../../stores/settingStore";
 import { defaults } from "../../constants";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Range, SessionHistory, TitleRanges } from "../../model/SessionHistory";
-import { useShallow } from "zustand/react/shallow";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import MinimumActivityDuration from "./MinimumActivityDuration";
 import { ChartPlaceholder } from "./ChartPlaceholder";
+import { Button } from "@/components/ui/button";
 
 export default function Chart({ chart }: { chart: SessionHistory }) {
+    const [showingHistory, setShowingHistory] = useState(false);
+    const [historyIndex, setHistoryIndex] = useState(0);
+    const chartHistory = useChartStore(state => state.chartHistory);
+    const deleteChart = useChartStore(state => state.deleteChart);
+
+    const [open, setOpen] = useState(false);
+
+    const canGoBack = historyIndex > 0;
+    const canGoForward = historyIndex < chartHistory.length - 1;
+
+    const handleBack = () => {
+        if (!showingHistory) {
+            setShowingHistory(true);
+            setHistoryIndex(chartHistory.length - 1);
+        } else if (canGoBack) {
+            setHistoryIndex(prev => prev - 1);
+        }
+    };
+
+    const handleForward = () => {
+        if (canGoForward) {
+            setHistoryIndex(prev => prev + 1);
+        } else if (showingHistory) {
+            setShowingHistory(false);
+        }
+    };
+
     return (
-        <>{chart.chartData ? <ChartGenerator data={chart.chartData} /> : <ChartPlaceholder />}</>
+        <div className="w-screen">
+            {/* Navigation Controls */}
+            {chartHistory.length > 0 && (
+                <div className="w-3/4 m-auto mb-4 flex justify-between items-center">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleBack}
+                        disabled={!chartHistory.length}
+                        className="rounded-full"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    {showingHistory && (
+                        <div className="flex gap-2 items-center">
+                            <div className="flex items-center gap-2">
+                                <History className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-medium">{historyIndex + 1}</span>
+                                <Badge variant="secondary" className="text-xs px-2 py-0">
+                                    of {chartHistory.length}
+                                </Badge>
+                            </div>
+                            <Dialog open={open} onOpenChange={setOpen}>
+                                <DialogTrigger asChild>
+                                    <div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground hover:text-white transition-colors"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Delete chart</span>
+                                        </Button>
+                                    </div>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Delete Chart</DialogTitle>
+                                        <DialogDescription>
+                                            Are you sure you want to delete this chart? This action
+                                            cannot be undone.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() => {
+                                                deleteChart(chartHistory[historyIndex].id);
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    )}
+
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleForward}
+                        disabled={!showingHistory && !chartHistory.length}
+                        className="rounded-full"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
+
+            {/* Chart Display */}
+            {showingHistory ? (
+                chartHistory[historyIndex]?.chartData ? (
+                    <>
+                        <ChartGenerator
+                            data={chartHistory[historyIndex].chartData}
+                            pomodoroLength={chartHistory[historyIndex].pomodoroLengthInSeconds}
+                        />
+                    </>
+                ) : (
+                    <ChartPlaceholder />
+                )
+            ) : chart.chartData ? (
+                <ChartGenerator
+                    data={chart.chartData}
+                    pomodoroLength={chart.pomodoroLengthInSeconds}
+                />
+            ) : (
+                <ChartPlaceholder />
+            )}
+        </div>
     );
 }
 
-const ChartGenerator = ({ data }: { data: Map<string, TitleRanges[]> }) => {
+const ChartGenerator = ({
+    data,
+    pomodoroLength,
+}: {
+    data: Map<string, TitleRanges[]>;
+    pomodoroLength: number;
+}) => {
     const divRef = useRef<HTMLDivElement | null>(null);
 
     return (
@@ -35,7 +166,7 @@ const ChartGenerator = ({ data }: { data: Map<string, TitleRanges[]> }) => {
             <div className="w-3/4 m-auto bg-white dark:bg-zinc-900 rounded-lg" ref={divRef}>
                 <Card>
                     <CardContent className="py-7 px-6 pb-3">
-                        <TimelineChart data={data} />
+                        <TimelineChart data={data} pomodoroLength={pomodoroLength} />
                     </CardContent>
 
                     <CardFooter className="flex justify-between items-center">
@@ -47,13 +178,19 @@ const ChartGenerator = ({ data }: { data: Map<string, TitleRanges[]> }) => {
     );
 };
 
-function TimelineChart({ data }: { data: Map<string, TitleRanges[]> }) {
+function TimelineChart({
+    data,
+    pomodoroLength,
+}: {
+    data: Map<string, TitleRanges[]>;
+    pomodoroLength: number;
+}) {
     const timelineRows = Array.from(data).map(([windowClass, titleRanges]) => (
         <div className="flex items-center gap-5" key={windowClass}>
             <div className="w-28 truncate select-none text-sm font-500 dark:font-300">
                 {windowClass.charAt(0).toUpperCase() + windowClass.slice(1)}
             </div>
-            <TimelineRow titleRanges={titleRanges} />
+            <TimelineRow titleRanges={titleRanges} pomodoroLength={pomodoroLength} />
         </div>
     ));
 
@@ -64,7 +201,13 @@ function TimelineChart({ data }: { data: Map<string, TitleRanges[]> }) {
     );
 }
 
-function TimelineRow({ titleRanges }: { titleRanges: TitleRanges[] }) {
+function TimelineRow({
+    titleRanges,
+    pomodoroLength,
+}: {
+    titleRanges: TitleRanges[];
+    pomodoroLength: number;
+}) {
     const timeBars = () => {
         const timeBars = [];
         let i = 0;
@@ -92,6 +235,7 @@ function TimelineRow({ titleRanges }: { titleRanges: TitleRanges[] }) {
                     previousRange={previousRange}
                     currentRange={currentRange}
                     barDetails={barDetails}
+                    pomodoroLength={pomodoroLength}
                 />
             );
 
@@ -108,24 +252,15 @@ function TimelineRangeBars({
     previousRange,
     currentRange,
     barDetails,
+    pomodoroLength,
 }: {
     previousRange: Range | null;
     currentRange: Range;
     barDetails: TitleRanges[];
+    pomodoroLength: number;
 }) {
-    const { sessionLengthInSeconds, numberOfSessions, breakLengthInSeconds } = useTimerStore(
-        useShallow(state => ({
-            sessionLengthInSeconds: state.sessionLengthInSeconds,
-            numberOfSessions: state.numberOfSessions,
-            breakLengthInSeconds: state.breakLengthInSeconds,
-        }))
-    );
-
-    let totalLength =
-        sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
-
     const calculateBarWidth = (range: Range) => {
-        return (rangeDifference(range) / totalLength) * 100;
+        return (rangeDifference(range) / pomodoroLength) * 100;
     };
 
     const rangeDifference = (range: Range) => {

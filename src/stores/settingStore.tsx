@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Store } from "@tauri-apps/plugin-store";
 import { z } from "zod";
 import { defaults } from "../constants";
+import { SessionHistory } from "../model/SessionHistory";
 
 const timerSettingsSchema = z.object({
     sessionLengthInSeconds: z
@@ -21,11 +22,23 @@ const appearanceSettingsSchema = z.object({
 });
 
 const chartSettingsSchema = z.object({
-    minimumActivityDuration: z.number().min(1).default(30),
+    minimumActivityDuration: z.number().min(1).default(15),
+});
+
+const chartHistorySchema = z.object({
+    chartData: z.record(
+        z.array(z.object({ range: z.tuple([z.number(), z.number()]), title: z.string() }))
+    ),
+    id: z.string(),
+    pomodoroLengthInSeconds: z.number(),
+    sessionStartedOn: z.string(),
 });
 
 const STORE_NAME = "settings.json";
 const store = await Store.load(STORE_NAME, { autoSave: true });
+
+const CHART_STORE_NAME = "chart_data.json";
+const chartStore = await Store.load(CHART_STORE_NAME, { autoSave: true });
 
 interface TimerSettings {
     sessionLengthInSeconds: number;
@@ -74,14 +87,56 @@ export const useTimerStore = create<TimerState>(set => ({
 
 interface ChartState {
     minimumActivityDuration: number;
+    chartHistory: SessionHistory[];
     setMinimumActivityDuration: (duration: number) => void;
+    addToChartHistory: (chart: SessionHistory) => void;
+    deleteChart: (id: string) => void;
 }
 
 export const useChartStore = create<ChartState>(set => ({
     minimumActivityDuration: defaults.minimumActivityDuration,
+    chartHistory: [],
+
     setMinimumActivityDuration: async (duration: number) => {
         set({ minimumActivityDuration: duration });
         await store.set("chart.minimumActivityDuration", duration);
+    },
+    addToChartHistory: async (chart: SessionHistory) => {
+        if (!!chart.chartData) {
+            set(state => ({
+                chartHistory: [...state.chartHistory, chart],
+            }));
+
+            await chartStore.set(chart.id, chart);
+
+            let chartIDs = await chartStore.get("chart_ids");
+
+            if (!chartIDs) {
+                chartIDs = [];
+            }
+
+            let chartIDsResult = z.array(z.string()).safeParse(chartIDs);
+            if (chartIDsResult.success) {
+                await chartStore.set("chart_ids", [...chartIDsResult.data, chart.id]);
+            }
+        }
+    },
+    deleteChart: async (id: string) => {
+        set(state => {
+            let chartHistory = [...state.chartHistory];
+
+            return { chartHistory: chartHistory.filter(chart => chart.id !== id) };
+        });
+
+        let chartIDs = await chartStore.get("chart_ids");
+
+        let chartIDsResult = z.array(z.string()).safeParse(chartIDs);
+        if (chartIDsResult.success) {
+            let chartIDsResultFiltered = chartIDsResult.data.filter(chartID => chartID !== id);
+            await chartStore.set("chart_ids", chartIDsResultFiltered);
+        }
+
+        await chartStore.delete(id);
     },
 }));
 
@@ -108,6 +163,38 @@ async function hydrateChartSetting() {
         useChartStore.setState({
             minimumActivityDuration: chartResults.data.minimumActivityDuration,
         });
+    }
+
+    const chartIDs = await chartStore.get("chart_ids");
+    const chartIDsResult = z.array(z.string()).safeParse(chartIDs);
+
+    if (chartIDsResult.success) {
+        let chartPromises = chartIDsResult.data.slice(-5).map(id => {
+            return chartStore.get(id);
+        });
+
+        let chartHistory = await Promise.all(chartPromises);
+
+        if (chartHistory.length > 0) {
+            let chartHistoryResult = z.array(chartHistorySchema).safeParse(chartHistory);
+
+            if (chartHistoryResult.success) {
+                let chartHistory = chartHistoryResult.data.map(chart => {
+                    let map = new Map<string, { range: [number, number]; title: string }[]>(
+                        Object.entries(chart.chartData)
+                    );
+
+                    return new SessionHistory(
+                        chart.pomodoroLengthInSeconds,
+                        new Date(chart.sessionStartedOn),
+                        chart.id,
+                        map
+                    );
+                });
+
+                useChartStore.setState({ chartHistory });
+            }
+        }
     }
 }
 

@@ -14,9 +14,14 @@ class SessionHistory {
     pomodoroLengthInSeconds: number;
     sessionStartedOn: Date;
 
-    constructor(pomodoroLengthInSeconds: number, sessionStartedOn: Date, id: string = uuidv4()) {
+    constructor(
+        pomodoroLengthInSeconds: number,
+        sessionStartedOn: Date,
+        id: string = uuidv4(),
+        chartData: Map<string, TitleRanges[]> | null = null
+    ) {
         this.id = id;
-        this.chartData = null;
+        this.chartData = chartData;
         this.pomodoroLengthInSeconds = pomodoroLengthInSeconds;
         this.sessionStartedOn = sessionStartedOn;
     }

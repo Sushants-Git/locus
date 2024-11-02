@@ -4,7 +4,12 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import useAlertStore from "./stores/alertStore.tsx";
-import { hydrateSettings, useSettingsStore, useTimerStore } from "./stores/settingStore.tsx";
+import {
+    hydrateSettings,
+    useChartStore,
+    useSettingsStore,
+    useTimerStore,
+} from "./stores/settingStore.tsx";
 
 import Chart from "./components/Chart";
 import Timer from "./components/Timer.tsx";
@@ -30,6 +35,7 @@ function App() {
             breakLengthInSeconds: state.breakLengthInSeconds,
         }))
     );
+    const addToChartHistory = useChartStore(state => state.addToChartHistory);
 
     const [chart, setChart] = useState(() => {
         const totalPomodoro =
@@ -66,6 +72,19 @@ function App() {
         });
     }, []);
 
+    const resetChart = useCallback(() => {
+        addToChartHistory(chart);
+
+        setChart(prev => {
+            const totalPomodoro =
+                sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+
+            const chart = new SessionHistory(totalPomodoro, new Date());
+
+            return chart;
+        });
+    }, [chart, sessionLengthInSeconds, numberOfSessions, breakLengthInSeconds]);
+
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <HydrationGuard>
@@ -73,7 +92,11 @@ function App() {
                     <div className="h-screen flex flex-col justify-center">
                         <Settings />
                         <div className="h-3/4 flex flex-col gap-16 justify-center">
-                            <Timer updateChart={updateChart} adjustChart={adjustChart} />
+                            <Timer
+                                updateChart={updateChart}
+                                adjustChart={adjustChart}
+                                resetChart={resetChart}
+                            />
                             <Indicator />
                             <Chart chart={chart} />
                         </div>
