@@ -90,7 +90,7 @@ interface ChartState {
     chartHistory: SessionHistory[];
     setMinimumActivityDuration: (duration: number) => void;
     addToChartHistory: (chart: SessionHistory) => void;
-    deleteChart: (id: string) => void;
+    deleteChart: (id: string) => Promise<void>;
 }
 
 export const useChartStore = create<ChartState>(set => ({

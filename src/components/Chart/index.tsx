@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 export default function Chart({ chart }: { chart: SessionHistory }) {
     const [showingHistory, setShowingHistory] = useState(false);
     const [historyIndex, setHistoryIndex] = useState(0);
+
     const chartHistory = useChartStore(state => state.chartHistory);
     const deleteChart = useChartStore(state => state.deleteChart);
 
@@ -50,6 +51,18 @@ export default function Chart({ chart }: { chart: SessionHistory }) {
         } else if (showingHistory) {
             setShowingHistory(false);
         }
+    };
+
+    const handleDelete = async () => {
+        await deleteChart(chartHistory[historyIndex].id);
+        if (historyIndex > 0) {
+            handleBack();
+        } else if (chartHistory.length !== 1) {
+        } else {
+            setShowingHistory(false);
+            setHistoryIndex(0);
+        }
+        setOpen(false);
     };
 
     return (
@@ -101,13 +114,7 @@ export default function Chart({ chart }: { chart: SessionHistory }) {
                                         <Button variant="outline" onClick={() => setOpen(false)}>
                                             Cancel
                                         </Button>
-                                        <Button
-                                            variant="destructive"
-                                            onClick={() => {
-                                                deleteChart(chartHistory[historyIndex].id);
-                                                setOpen(false);
-                                            }}
-                                        >
+                                        <Button variant="destructive" onClick={handleDelete}>
                                             Delete
                                         </Button>
                                     </DialogFooter>

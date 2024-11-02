@@ -1,13 +1,14 @@
 import NumberFlow from "@number-flow/react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useChartStore, useTimerStore } from "../stores/settingStore";
-import { Play, Pause, TimerReset } from "lucide-react";
+import { Play, Pause, TimerReset, Coffee, BookText } from "lucide-react";
 import { defaults } from "../constants";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
 import { useWindowTitleStream } from "../hooks/useWindowTitleStream";
 import { useShallow } from "zustand/react/shallow";
 import { TitleRanges } from "src/model/SessionHistory";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type TimerStatus = "idle" | "running" | "paused" | "break" | "ended" | "completed";
 
@@ -42,7 +43,7 @@ function Timer({
     const [currentSession, setCurrentSession] = useState(0);
     const [completedAllSessions, setCompletedAllSessions] = useState(false);
 
-    if(completedAllSessions){
+    if (completedAllSessions) {
         // TODO: reminder to add a message on session completion
     }
 
@@ -191,6 +192,13 @@ function Timer({
 
     return (
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
+            <div className="flex flex-col justify-end">
+                {timerStatus === "running" ||
+                timerStatus === "break" ||
+                timerStatus === "paused" ? (
+                    <PomodoroIndicator timerStatus={timerStatus} fill={iconColor} />
+                ) : null}
+            </div>
             <div
                 className="text-9xl tabular-nums text-white font-600 w-fit border rounded-lg px-8 relative group select-none"
                 style={{
@@ -259,5 +267,39 @@ function Timer({
         </div>
     );
 }
+
+const PomodoroIndicator = ({ timerStatus, fill }: { timerStatus: TimerStatus; fill: string }) => {
+    const [lastActiveState, setLastActiveState] = useState(timerStatus);
+
+    useEffect(() => {
+        if (timerStatus === "running" || timerStatus === "break") {
+            setLastActiveState(timerStatus);
+        }
+    }, [timerStatus]);
+
+    const emoji =
+        lastActiveState === "break" ? (
+            <Coffee className="h-5 w-5" strokeWidth={1} />
+        ) : (
+            <BookText className="h-5 w-5" strokeWidth={1} />
+        );
+
+    // return <div style={{ color: fill }}>{emoji}</div>;
+
+    return (
+        <TooltipProvider delayDuration={200}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div style={{ color: fill }} className="cursor-pointer">
+                        {emoji}
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">
+                    <p>{lastActiveState === "running" ? "session" : "break"}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
 
 export default MemoizedTimer;
