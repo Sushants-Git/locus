@@ -1,7 +1,6 @@
 import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import topLevelAwait from "vite-plugin-top-level-await";
 // <reference types="vite-plugin-svgr/client" />
 import svgr from "vite-plugin-svgr";
 
@@ -10,16 +9,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [
-    react(),
-    svgr(),
-    topLevelAwait({
-      // The export name of top-level await promise for each chunk module
-      promiseExportName: "__tla",
-      // The function to generate import names of top-level await promise in each chunk module
-      promiseImportName: (i) => `__tla_${i}`,
-    }),
-  ],
+  plugins: [react(), svgr()],
 
   resolve: {
     alias: {

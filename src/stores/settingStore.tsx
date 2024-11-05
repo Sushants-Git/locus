@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { Store } from "@tauri-apps/plugin-store";
 import { z } from "zod";
 import { defaults } from "../constants";
 import { SessionHistory } from "../model/SessionHistory";
+import { loadChartStore, loadStore } from "./store";
 
 const timerSettingsSchema = z.object({
     sessionLengthInSeconds: z
@@ -34,12 +34,6 @@ const chartHistorySchema = z.object({
     sessionStartedOn: z.string(),
 });
 
-const STORE_NAME = "settings.json";
-const store = await Store.load(STORE_NAME, { autoSave: true });
-
-const CHART_STORE_NAME = "chart_data.json";
-const chartStore = await Store.load(CHART_STORE_NAME, { autoSave: true });
-
 interface TimerSettings {
     sessionLengthInSeconds: number;
     numberOfSessions: number;
@@ -68,11 +62,13 @@ export const useTimerStore = create<TimerState>(set => ({
 
     setBackgroundImagePath: async path => {
         set({ backgroundImagePath: path });
+        const store = await loadStore();
         await store.set("timer.backgroundImagePath", path);
     },
 
     setAccentColor: async hex => {
         set({ accentColor: hex });
+        const store = await loadStore();
         await store.set("timer.accentColor", hex);
     },
 
@@ -81,6 +77,7 @@ export const useTimerStore = create<TimerState>(set => ({
             ...state,
             ...settings,
         }));
+        const store = await loadStore();
         await store.set("timer.settings", settings);
     },
 }));
@@ -99,6 +96,7 @@ export const useChartStore = create<ChartState>(set => ({
 
     setMinimumActivityDuration: async (duration: number) => {
         set({ minimumActivityDuration: duration });
+        const store = await loadStore();
         await store.set("chart.minimumActivityDuration", duration);
     },
     addToChartHistory: async (chart: SessionHistory) => {
@@ -107,6 +105,7 @@ export const useChartStore = create<ChartState>(set => ({
                 chartHistory: [...state.chartHistory, chart],
             }));
 
+            const chartStore = await loadChartStore();
             await chartStore.set(chart.id, chart);
 
             let chartIDs = await chartStore.get("chart_ids");
@@ -128,6 +127,7 @@ export const useChartStore = create<ChartState>(set => ({
             return { chartHistory: chartHistory.filter(chart => chart.id !== id) };
         });
 
+        const chartStore = await loadChartStore();
         let chartIDs = await chartStore.get("chart_ids");
 
         let chartIDsResult = z.array(z.string()).safeParse(chartIDs);
@@ -156,6 +156,9 @@ export const hydrateSettings = async () => {
 };
 
 async function hydrateChartSetting() {
+    const store = await loadStore();
+    const chartStore = await loadChartStore();
+
     const minimumActivityDuration = await store.get("chart.minimumActivityDuration");
     const chartResults = chartSettingsSchema.safeParse({ minimumActivityDuration });
 
@@ -199,6 +202,8 @@ async function hydrateChartSetting() {
 }
 
 async function hydrateTimerSetting() {
+    const store = await loadStore();
+
     const backgroundImagePath = await store.get("timer.backgroundImagePath");
     const accentColor = await store.get("timer.accentColor");
 
