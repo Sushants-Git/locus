@@ -2,7 +2,7 @@ mod model;
 mod stream;
 mod window_info;
 
-use std::{fs, path::Path, sync::Arc};
+use std::{env, fs, path::Path, sync::Arc};
 use tauri::{generate_handler, State};
 use tokio::sync::Mutex;
 use uuid::Uuid;
@@ -55,6 +55,18 @@ fn save_file(from: String, to: String, target_folder: String) -> Result<String, 
         .map(|s| s.to_string())
 }
 
+#[tauri::command]
+fn supported_display_server() -> bool {
+    match std::env::var("XDG_SESSION_TYPE") {
+        Ok(ref session_type) if session_type == "x11" => true,
+        Ok(_) => false,
+        Err(_) => {
+            eprintln!("XDG_SESSION_TYPE environment variable is not set");
+            false
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let stream_state = StreamState {
@@ -67,7 +79,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(stream_state)
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(generate_handler![stream_title, stop_stream, save_file])
+        .invoke_handler(generate_handler![
+            stream_title,
+            stop_stream,
+            save_file,
+            supported_display_server
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

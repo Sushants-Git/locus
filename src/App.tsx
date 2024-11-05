@@ -22,8 +22,41 @@ import { ThemeProvider } from "@/components/ui/theme-provider.tsx";
 
 import { SessionHistory, TitleRanges } from "./model/SessionHistory.ts";
 import { ActiveWindow } from "./model/PomodoroTypes.ts";
+import { invoke } from "@tauri-apps/api/core";
+import Loading from "./components/LoadingScreen.tsx";
+import CompatibilityNotice from "./components/CompatibilityNotice.tsx";
+
+function sleep() {
+    return new Promise(res => {
+        setTimeout(() => res(null), 400);
+    });
+}
 
 function App() {
+    const [displayServerSupported, setDisplayServerSupported] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        const checkDisplayServer = async () => {
+            let response: boolean = await invoke("supported_display_server");
+            await sleep();
+            setDisplayServerSupported(response);
+        };
+
+        checkDisplayServer();
+    }, []);
+
+    if (displayServerSupported === null) {
+        return <Loading />;
+    }
+
+    if (displayServerSupported === false) {
+        return <CompatibilityNotice />;
+    }
+
+    return <MainScreen />;
+}
+
+function MainScreen() {
     useEffect(() => {
         hydrateSettings();
     }, []);
