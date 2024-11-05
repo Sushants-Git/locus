@@ -17,5 +17,6 @@ pkgbase = locus
 	options = !strip
 	options = !emptydirs
 	source_x86_64 = https://github.com/Sushants-Git/locus/releases/download/v0.1.0/locus_0.1.0_amd64.deb
+	sha256sums_x86_64 = 5840e481b870524f9d4e2eaa0d2e7b749d8dc67e36a541250332432d09724d00
 
 pkgname = locus
