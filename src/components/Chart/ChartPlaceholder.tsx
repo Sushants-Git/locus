@@ -15,7 +15,7 @@ export const ChartPlaceholder = () => {
         <div className="w-screen">
             <div className="w-3/4 m-auto bg-white dark:bg-zinc-900 rounded-lg">
                 <Card>
-                    <CardContent className="py-16 flex flex-col items-center justify-center text-center">
+                    <CardContent className="py-8 flex flex-col items-center justify-center text-center">
                         <div className="relative mb-6">
                             <div
                                 className="absolute inset-0 rounded-full opacity-20"

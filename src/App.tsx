@@ -91,7 +91,7 @@ function App() {
                 <DottedBackground>
                     <div className="h-screen flex flex-col justify-center">
                         <Settings />
-                        <div className="h-3/4 flex flex-col gap-16 justify-center">
+                        <div className="h-3/4 flex flex-col gap-12 justify-center">
                             <Timer
                                 updateChart={updateChart}
                                 adjustChart={adjustChart}
