@@ -2,10 +2,7 @@
 [![AUR](https://img.shields.io/badge/AUR-v0.1.0-lightblue.svg)](https://aur.archlinux.org/packages/locus)
 [![GitHub Release](https://img.shields.io/github/release/Sushants-Git/locus.svg)](https://github.com/Sushants-Git/locus/releases)
 
-
-An intelligent activity tracker that helps you understand and improve your focus habits.
-
-![image](https://github.com/user-attachments/assets/19061081-996d-4e91-a168-677e8d7f3c47)
+Locus has 2 simple goals: *tracking your focused moments* and *unveiling where the rest of your time silently flows.*
 
 ## Compatibility
 Locus currently supports Linux distributions running X11 only. To check your display server, run `echo $XDG_SESSION_TYPE`. If the output is `x11`, Locus should work on your system. If it shows `wayland` or another type, we are working on support. Please open an issue to help us prioritize your server type.
@@ -29,20 +26,13 @@ Locus provides pre-built binary packages for Debian-based distributions, includi
 sudo dpkg -i locus_0.1.0_amd64.deb
 ```
 
-## What Makes Locus Different?
-Locus automatically tracks your active windows to create detailed focus analytics - all while respecting your privacy. No internet connection required!
-
 ### Key Features
-- **Smart Activity Tracking**: Automatically detects your current activity through window titles:
-  - Browser tabs and video titles
-  - Terminal commands and processes
-  - Video player content (VLC, MPV, etc.)
-  - Document names in text editors
-  - Application names and states
-- **Private by Design**: Works completely offline - no external data transmission
-- **Visual Timeline**: Generate beautiful activity charts to understand your focus patterns
-- **Customizable Thresholds**: Set minimum focus durations to filter out brief distractions
-- **Resource Efficient**: Uses minimal system resources by only reading window title information
+
+- **Automatic Activity Tracking**: Recognizes tasks like web browsing, text editing, and media playback.
+- **Elegant Visual Timeline**: Provides clean, user-friendly charts to visualize your focus patterns.
+- **Customizable Thresholds**: Filters out brief distractions for a more accurate productivity picture.
+- **Resource-Efficient**: Runs efficiently in the background without excessive resource usage.
+- **Privacy-Focused**: Operates entirely offline, keeping your data secure on your local device.
 
 ## Screenshots
 ![No activity](https://github.com/user-attachments/assets/9feddb1e-859f-4e43-9881-12c87a8fadd7)
