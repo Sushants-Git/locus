@@ -31,24 +31,24 @@ pub async fn stream_title<'r>(app: tauri::AppHandle, stream_state: State<'r, Str
         "x11" => {
             let _ = stream_x11(cancel_flag, app, sleep_duration).map_err(|e| eprintln!("{}", e));
         }
-        "wayland" => {
-            // TODO: currently this will only works for hyprland
-            // need to make it so that it works for all wayland display managers
+        // "" => {
+        //     // TODO: currently this will only works for hyprland
+        //     // need to make it so that it works for all wayland display managers
 
-            tokio::spawn(async move {
-                loop {
-                    if *cancel_flag.lock().await {
-                        break;
-                    }
+        //     tokio::spawn(async move {
+        //         loop {
+        //             if *cancel_flag.lock().await {
+        //                 break;
+        //             }
 
-                    let window_info = get_hypr_title().await;
-                    app.emit_to(EventTarget::app(), "active-window-title", window_info)
-                        .unwrap();
+        //             let window_info = get_hypr_title().await;
+        //             app.emit_to(EventTarget::app(), "active-window-title", window_info)
+        //                 .unwrap();
 
-                    sleep(Duration::from_millis(200)).await;
-                }
-            });
-        }
+        //             sleep(Duration::from_millis(200)).await;
+        //         }
+        //     });
+        // }
         _ => {}
     }
 }
