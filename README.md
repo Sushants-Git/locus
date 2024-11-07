@@ -1,5 +1,5 @@
 # Locus
-[![AUR](https://img.shields.io/badge/AUR-v0.1.0-lightblue.svg)](https://aur.archlinux.org/packages/locus)
+[![AUR](https://img.shields.io/badge/AUR-v0.1.1-lightblue.svg)](https://aur.archlinux.org/packages/locus)
 [![GitHub Release](https://img.shields.io/github/release/Sushants-Git/locus.svg)](https://github.com/Sushants-Git/locus/releases)
 
 Locus has 2 simple goals: *tracking your focused moments* and *unveiling where the rest of your time silently flows.*
