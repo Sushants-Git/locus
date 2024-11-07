@@ -426,8 +426,8 @@ const TimelineBarWithToolTip = ({
                         <DialogTitle>Timeline Details</DialogTitle>
                         <DialogDescription>Shows timeline details</DialogDescription>
                     </DialogHeader>
-                    <ScrollArea className="max-h-72 rounded-md p-4 border">
-                        <div className="space-y-2">
+                    <ScrollArea className="max-h-72 rounded-md border">
+                        <div className="space-y-2 p-4">
                             {condenseInfo ? condensedContent : uncondensedContent}
                         </div>
                     </ScrollArea>
