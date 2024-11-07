@@ -1,8 +1,8 @@
 [package]
 name = "locus"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "An intelligent activity tracker that helps you understand and improve your focus habits."
+authors = ["Sushant-Git"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
