@@ -23,7 +23,7 @@ yay -S locus
 Locus provides pre-built binary packages for Debian-based distributions, including Ubuntu. Download the latest `.deb` package for your system architecture from the [GitHub Releases page](https://github.com/Sushants-Git/locus/releases/) and install it using `dpkg`:
 
 ```bash
-sudo dpkg -i locus_0.1.0_amd64.deb
+sudo dpkg -i locus_0.1.1_amd64.deb
 ```
 
 ### Key Features
