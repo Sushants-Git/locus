@@ -1,5 +1,5 @@
 import { ForwardedRef, forwardRef, memo, useState } from "react";
-import { Clock, Settings2, ChartGantt } from "lucide-react";
+import { Clock, ChartGantt } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
 
 import TimerDialog from "./TimerDialog";
 import ChartDialog from "./ChartDialog";
+import { Button } from "@/components/ui/button";
 
 interface SettingMenuProps {
     children: React.ReactNode;
@@ -55,17 +56,45 @@ function Setting() {
 }
 
 const SettingsButton = forwardRef((props, forwardRef: ForwardedRef<HTMLButtonElement>) => {
+    const [open, setOpen] = useState<boolean>(false);
+
     return (
-        <button
-            className="inline-flex items-center justify-center rounded-md transition-colorsring-offset-background hover:bg-accent hover:text-accent-foreground h-8 w-8 bg-background border"
-            type="button"
-            aria-label="Settings"
-            {...props}
+        <Button
+            className="group h-8 w-8"
+            variant="outline"
+            size="icon"
+            onClick={() => setOpen(prevState => !prevState)}
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
             ref={forwardRef}
+            {...props}
         >
-            <Settings2 className="h-4 w-4" strokeWidth={2} />
-            <span className="sr-only">Settings</span>
-        </button>
+            <svg
+                className="pointer-events-none"
+                width={16}
+                height={16}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <path
+                    d="M4 12L20 12"
+                    className="origin-center -translate-y-[7px] transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
+                />
+                <path
+                    d="M4 12H20"
+                    className="origin-center transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.8)] group-aria-expanded:rotate-45"
+                />
+                <path
+                    d="M4 12H20"
+                    className="origin-center translate-y-[7px] transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[135deg]"
+                />
+            </svg>
+        </Button>
     );
 });
 
