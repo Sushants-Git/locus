@@ -1,7 +1,7 @@
 import NumberFlow from "@number-flow/react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useChartStore, useTimerStore } from "../stores/settingStore";
-import { Play, Pause, TimerReset, Coffee, BookText } from "lucide-react";
+import { Play, Pause, TimerReset, Coffee, BookText, Shell } from "lucide-react";
 import { defaults } from "../constants";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { convertSeconds } from "../utils/utils";
@@ -194,8 +194,9 @@ function Timer({
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
             <div className="flex flex-col justify-end">
                 {timerStatus === "running" ||
-                timerStatus === "break" ||
-                timerStatus === "paused" ? (
+                    timerStatus === "break" ||
+                    timerStatus === "paused" ||
+                    timerStatus === "idle" ? (
                     <PomodoroIndicator timerStatus={timerStatus} fill={iconColor} />
                 ) : null}
             </div>
@@ -277,14 +278,29 @@ const PomodoroIndicator = ({ timerStatus, fill }: { timerStatus: TimerStatus; fi
         }
     }, [timerStatus]);
 
+    if (timerStatus === "idle") {
+        return (
+            <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div style={{ color: fill }} className="cursor-pointer">
+                            <Shell className="h-5 w-5" strokeWidth={1} />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                        <p>no active session</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        );
+    }
+
     const emoji =
         lastActiveState === "break" ? (
             <Coffee className="h-5 w-5" strokeWidth={1} />
         ) : (
             <BookText className="h-5 w-5" strokeWidth={1} />
         );
-
-    // return <div style={{ color: fill }}>{emoji}</div>;
 
     return (
         <TooltipProvider delayDuration={200}>
@@ -295,7 +311,7 @@ const PomodoroIndicator = ({ timerStatus, fill }: { timerStatus: TimerStatus; fi
                     </div>
                 </TooltipTrigger>
                 <TooltipContent className="text-xs">
-                    <p>{lastActiveState === "running" ? "session" : "break"}</p>
+                    <p>{lastActiveState === "running" ? "focus time" : "break time"}</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
