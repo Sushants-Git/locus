@@ -134,9 +134,9 @@ function MainScreen() {
                             <Chart chart={chart} />
                         </div>
                         <ModeToggle />
-                        <AlertComponent />
                     </div>
                 </DottedBackground>
+                <AlertComponent />
             </HydrationGuard>
         </ThemeProvider>
     );

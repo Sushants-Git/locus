@@ -8,6 +8,9 @@ export default {
                 "bricolage-grotesque": ["Bricolage Grotesque", "sans-serif"],
                 "instrument-sans": ["Instrument Sans", "sans-serif"],
             },
+            zIndex: {
+                60: 60,
+            },
             fontWeight: {
                 100: "100",
                 200: "200",

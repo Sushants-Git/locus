@@ -160,12 +160,14 @@ function TimeValueSelectors({
                     <Label htmlFor="sessionLength">Session Length (minutes)</Label>
                     <Input
                         id="sessionLength"
-                        type="number"
+                        type="text"
                         value={sessionLength}
-                        min={1}
                         onChange={e => {
-                            if (Number.isInteger(e.target.valueAsNumber)) {
-                                updateTimeValues({ sessionLength: e.target.valueAsNumber });
+                            let input = Number(e.target.value);
+                            let isNumber = !isNaN(input);
+                            let isPositive = input >= 0;
+                            if (isNumber && isPositive) {
+                                updateTimeValues({ sessionLength: input });
                             }
                         }}
                     />
@@ -174,12 +176,15 @@ function TimeValueSelectors({
                     <Label htmlFor="breakLength">Break Length (minutes)</Label>
                     <Input
                         id="breakLength"
-                        type="number"
+                        type="text"
                         value={breakLength}
                         min={0}
                         onChange={e => {
-                            if (Number.isInteger(e.target.valueAsNumber)) {
-                                updateTimeValues({ breakLength: e.target.valueAsNumber });
+                            let input = Number(e.target.value);
+                            let isNumber = !isNaN(input);
+                            let isPositive = input >= 0;
+                            if (isNumber && isPositive) {
+                                updateTimeValues({ breakLength: input });
                             }
                         }}
                     />
@@ -188,12 +193,15 @@ function TimeValueSelectors({
                     <Label htmlFor="numberOfSessions">Number of Sessions</Label>
                     <Input
                         id="numberOfSessions"
-                        type="number"
+                        type="text"
                         value={numberOfSessions}
                         min={1}
                         onChange={e => {
-                            if (Number.isInteger(e.target.valueAsNumber)) {
-                                updateTimeValues({ numberOfSessions: e.target.valueAsNumber });
+                            let input = Number(e.target.value);
+                            let isNumber = !isNaN(input);
+                            let isPositive = input >= 0;
+                            if (isNumber && isPositive) {
+                                updateTimeValues({ numberOfSessions: input });
                             }
                         }}
                     />
@@ -268,7 +276,12 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
 
     const handleSave = async () => {
         await saveBackgroundImage();
-        saveTimeValues();
+
+        if (canSaveTimeValues()) {
+            saveTimeValues();
+        } else {
+            return;
+        }
 
         handleDialogChange(false);
     };
@@ -316,6 +329,26 @@ export default function TimerDialog({ activeDialog, handleDialogChange }: TimerD
             breakLengthInSeconds: timeValues.breakLength * 60,
             numberOfSessions: timeValues.numberOfSessions,
         });
+    };
+
+    const canSaveTimeValues = () => {
+        if (timeValues.sessionLength <= 0) {
+            showAlert({
+                type: "warning",
+                title: "Invalid Input",
+                message: `Session length must be greater than 0. Currently, it is ${timeValues.sessionLength}.`,
+            });
+            return false;
+        } else if (timeValues.numberOfSessions <= 0) {
+            showAlert({
+                type: "warning",
+                title: "Invalid Input",
+                message: `Number of sessions must be greater than 0. Currently, it is ${timeValues.numberOfSessions}.`,
+            });
+            return false;
+        }
+
+        return true;
     };
 
     return (
