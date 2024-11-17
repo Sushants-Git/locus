@@ -4,10 +4,8 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { timeDiff } from "../../../src/utils/utils";
@@ -16,13 +14,12 @@ import { defaults } from "../../constants";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Range, SessionHistory, TitleRanges } from "../../model/SessionHistory";
-import { ChevronLeft, ChevronRight, History, Trash2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import MinimumActivityDuration from "./MinimumActivityDuration";
 import { ChartPlaceholder } from "./ChartPlaceholder";
-import { Button } from "@/components/ui/button";
+import ChartNavigation from "./Navigation";
 
 export default function Chart({ chart }: { chart: SessionHistory }) {
     const [showingHistory, setShowingHistory] = useState(false);
@@ -30,8 +27,6 @@ export default function Chart({ chart }: { chart: SessionHistory }) {
 
     const chartHistory = useChartStore(state => state.chartHistory);
     const deleteChart = useChartStore(state => state.deleteChart);
-
-    const [open, setOpen] = useState(false);
 
     const canGoBack = historyIndex > 0;
     const canGoForward = historyIndex < chartHistory.length - 1;
@@ -62,102 +57,64 @@ export default function Chart({ chart }: { chart: SessionHistory }) {
             setShowingHistory(false);
             setHistoryIndex(0);
         }
-        setOpen(false);
     };
 
     return (
         <div className="w-screen">
-            {/* Navigation Controls */}
-            {chartHistory.length > 0 && (
-                <div className="w-3/4 m-auto mb-4 flex justify-between items-center">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleBack}
-                        disabled={!chartHistory.length}
-                        className="rounded-full"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
+            <ChartNavigation
+                chartHistory={chartHistory}
+                showingHistory={showingHistory}
+                historyIndex={historyIndex}
+                onBack={handleBack}
+                onForward={handleForward}
+                onDelete={handleDelete}
+            />
 
-                    {showingHistory && (
-                        <div className="flex gap-2 items-center">
-                            <div className="flex items-center gap-2">
-                                <History className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm font-medium">{historyIndex + 1}</span>
-                                <Badge variant="secondary" className="text-xs px-2 py-0">
-                                    of {chartHistory.length}
-                                </Badge>
-                            </div>
-                            <Dialog open={open} onOpenChange={setOpen}>
-                                <DialogTrigger asChild>
-                                    <div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-muted-foreground hover:text-white transition-colors"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                            <span className="sr-only">Delete chart</span>
-                                        </Button>
-                                    </div>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Delete Chart</DialogTitle>
-                                        <DialogDescription>
-                                            Are you sure you want to delete this chart? This action
-                                            cannot be undone.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <DialogFooter>
-                                        <Button variant="outline" onClick={() => setOpen(false)}>
-                                            Cancel
-                                        </Button>
-                                        <Button variant="destructive" onClick={handleDelete}>
-                                            Delete
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    )}
+            <ChartDisplay
+                showingHistory={showingHistory}
+                chartHistory={chartHistory}
+                historyIndex={historyIndex}
+                currentChart={chart}
+            />
+        </div>
+    );
+}
 
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleForward}
-                        disabled={!showingHistory && !chartHistory.length}
-                        className="rounded-full"
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
+interface ChartDisplayType {
+    showingHistory: boolean;
+    chartHistory: SessionHistory[];
+    historyIndex: number;
+    currentChart: SessionHistory;
+}
 
-            {/* Chart Display */}
-            {showingHistory ? (
-                chartHistory[historyIndex]?.chartData ? (
-                    <>
-                        <ChartGenerator
-                            data={chartHistory[historyIndex].chartData}
-                            pomodoroLength={chartHistory[historyIndex].pomodoroLengthInSeconds}
-                        />
-                    </>
-                ) : (
-                    <ChartPlaceholder />
-                )
-            ) : chart.chartData ? (
+const ChartDisplay = ({
+    showingHistory,
+    chartHistory,
+    historyIndex,
+    currentChart,
+}: ChartDisplayType) => {
+    const getActiveChart = () => {
+        if (showingHistory) {
+            return chartHistory[historyIndex];
+        }
+        return currentChart;
+    };
+
+    const activeChart = getActiveChart();
+
+    return (
+        <div className="w-full">
+            {activeChart?.chartData ? (
                 <ChartGenerator
-                    data={chart.chartData}
-                    pomodoroLength={chart.pomodoroLengthInSeconds}
+                    data={activeChart.chartData}
+                    pomodoroLength={activeChart.pomodoroLengthInSeconds}
                 />
             ) : (
                 <ChartPlaceholder />
             )}
         </div>
     );
-}
+};
 
 const ChartGenerator = ({
     data,
