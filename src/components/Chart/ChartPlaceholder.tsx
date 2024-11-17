@@ -1,8 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useChartStore, useTimerStore } from "../../stores/settingStore";
 import { useShallow } from "zustand/react/shallow";
-import { LineChart } from "lucide-react";
+import { Info, LineChart } from "lucide-react";
 import { defaults } from "../../constants";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const ChartPlaceholder = () => {
     const accentColor = useTimerStore(state => state.accentColor);
@@ -39,16 +41,27 @@ export const ChartPlaceholder = () => {
                                 Start a session to visualize your activity
                             </p>
 
-                            <div className="mt-6 text-xs text-muted-foreground/80 max-w-xs">
-                                Focus on an activity for at least{" "}
-                                <span className="font-medium text-foreground">
-                                    {minimumActivityDuration} continuous seconds
-                                </span>{" "}
-                                to see it appear on your timeline
-                            </div>
+                            <Alert
+                                variant="default"
+                                className="bg-primary/5 border-primary/10 mb-6"
+                            >
+                                <Info className="h-4 w-4 text-primary" />
+                                <AlertDescription className="text-sm text-primary">
+                                    Focus on an activity for at least{" "}
+                                    <span
+                                        className="font-medium"
+                                        style={{
+                                            color: accentColor || defaults.accentColor,
+                                        }}
+                                    >
+                                        {minimumActivityDuration} continuous seconds
+                                    </span>{" "}
+                                    to see it appear on your timeline
+                                </AlertDescription>
+                            </Alert>
                         </div>
 
-                        <div className="mt-8 flex items-center gap-1.5">
+                        <div className="mt-6 flex items-center gap-1.5">
                             {[40, 65, 45, 70, 50].map((width, i) => (
                                 <div
                                     key={i}
