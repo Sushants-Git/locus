@@ -22,7 +22,7 @@ const appearanceSettingsSchema = z.object({
 });
 
 const chartSettingsSchema = z.object({
-    minimumActivityDuration: z.number().min(1).default(15),
+    minimumActivityDuration: z.number().min(1).default(defaults.minimumActivityDuration),
 });
 
 const chartHistorySchema = z.object({
