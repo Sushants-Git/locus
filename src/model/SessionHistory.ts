@@ -12,18 +12,21 @@ class SessionHistory {
     id: string;
     chartData: Map<string, TitleRanges[]> | null;
     pomodoroLengthInSeconds: number;
+    breakLengthInSeconds: number; 
     sessionStartedOn: Date;
 
     constructor(
         pomodoroLengthInSeconds: number,
+        breakLengthInSeconds: number,
         sessionStartedOn: Date,
         id: string = uuidv4(),
-        chartData: Map<string, TitleRanges[]> | null = null
+        chartData: Map<string, TitleRanges[]> | null = null,
     ) {
         this.id = id;
         this.chartData = chartData;
         this.pomodoroLengthInSeconds = pomodoroLengthInSeconds;
         this.sessionStartedOn = sessionStartedOn;
+        this.breakLengthInSeconds = breakLengthInSeconds;
     }
 
     insertData(activeWindow: ActiveWindow, timeRangeInSeconds: Range) {

@@ -31,6 +31,7 @@ const chartHistorySchema = z.object({
     ),
     id: z.string(),
     pomodoroLengthInSeconds: z.number(),
+    breakLengthInSeconds: z.number().default(5 * 60),
     sessionStartedOn: z.string(),
 });
 
@@ -189,6 +190,7 @@ async function hydrateChartSetting() {
 
                     return new SessionHistory(
                         chart.pomodoroLengthInSeconds,
+                        chart.breakLengthInSeconds,
                         new Date(chart.sessionStartedOn),
                         chart.id,
                         map

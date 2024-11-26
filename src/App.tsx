@@ -73,13 +73,19 @@ function MainScreen() {
     const [chart, setChart] = useState(() => {
         const totalPomodoro =
             sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+        const totalBreak = breakLengthInSeconds * numberOfSessions;
 
-        return new SessionHistory(totalPomodoro, new Date());
+        return new SessionHistory(totalPomodoro, totalBreak, new Date());
     });
 
-    const adjustChart = useCallback((totalPomodoro: number) => {
+    const adjustChart = useCallback((totalPomodoro: number, totalBreak: number) => {
         setChart(prev => {
-            const updateChart = new SessionHistory(totalPomodoro, prev.sessionStartedOn, prev.id);
+            const updateChart = new SessionHistory(
+                totalPomodoro,
+                totalBreak,
+                prev.sessionStartedOn,
+                prev.id
+            );
 
             updateChart.chartData = prev.chartData;
 
@@ -91,6 +97,7 @@ function MainScreen() {
         setChart(prev => {
             const updateChart = new SessionHistory(
                 prev.pomodoroLengthInSeconds,
+                prev.breakLengthInSeconds,
                 prev.sessionStartedOn,
                 prev.id
             );
@@ -111,8 +118,9 @@ function MainScreen() {
         setChart(() => {
             const totalPomodoro =
                 sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+            const totalBreak = breakLengthInSeconds * numberOfSessions;
 
-            const chart = new SessionHistory(totalPomodoro, new Date());
+            const chart = new SessionHistory(totalPomodoro, totalBreak, new Date());
 
             return chart;
         });

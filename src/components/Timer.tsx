@@ -20,7 +20,7 @@ function Timer({
     resetChart,
 }: {
     updateChart: (activeWindowName: string, titleRanges: TitleRanges[]) => void;
-    adjustChart: (totalPomodoro: number) => void;
+    adjustChart: (totalPomodoro: number, totalBreak: number) => void;
     resetChart: () => void;
 }) {
     const backgroundImagePath = useTimerStore(state => state.backgroundImagePath);
@@ -104,8 +104,9 @@ function Timer({
     useEffect(() => {
         const totalPomodoro =
             sessionLengthInSeconds * numberOfSessions + breakLengthInSeconds * numberOfSessions;
+        const totalBreak = breakLengthInSeconds * numberOfSessions;
 
-        adjustChart(totalPomodoro);
+        adjustChart(totalPomodoro, totalBreak);
     }, [sessionLengthInSeconds, breakLengthInSeconds, numberOfSessions, adjustChart]);
 
     useEffect(() => {
@@ -194,9 +195,9 @@ function Timer({
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
             <div className="flex flex-col justify-end">
                 {timerStatus === "running" ||
-                    timerStatus === "break" ||
-                    timerStatus === "paused" ||
-                    timerStatus === "idle" ? (
+                timerStatus === "break" ||
+                timerStatus === "paused" ||
+                timerStatus === "idle" ? (
                     <PomodoroIndicator timerStatus={timerStatus} fill={iconColor} />
                 ) : null}
             </div>
