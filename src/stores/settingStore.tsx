@@ -173,7 +173,7 @@ async function hydrateChartSetting() {
     const chartIDsResult = z.array(z.string()).safeParse(chartIDs);
 
     if (chartIDsResult.success) {
-        let chartPromises = chartIDsResult.data.slice(-5).map(id => {
+        let chartPromises = chartIDsResult.data.map(id => {
             return chartStore.get(id);
         });
 
