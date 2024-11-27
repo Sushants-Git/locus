@@ -179,7 +179,8 @@ function Timer({
             updateAndResetRanges();
         }
 
-        if (!isSameWindow) {
+        // when we shift from running to break we want to flush the "titleRangesRef"
+        if (!isSameWindow || timerStatus === "break") {
             flushTitleRanges();
         }
 
@@ -189,7 +190,7 @@ function Timer({
 
         windowNameRef.current.currentWindow = activeWindow.windowName;
     }, [timerStatus, activeWindow, minimumActivityDuration, time]);
-    // Intentionally includes time to trigger on time changes, will be removed when a better alternative is found
+    // Intentionally includes "time" to trigger when "time" changes, will be removed when a better alternative is found
 
     return (
         <div className="font-bricolage-grotesque flex justify-center gap-4 w-screen">
