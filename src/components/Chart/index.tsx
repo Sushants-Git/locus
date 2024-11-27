@@ -148,6 +148,7 @@ const ChartGenerator = ({
                     <CardFooter className="flex justify-between items-center">
                         <MinimumActivityDuration />
                         <PerformanceGraphs
+                            key={activeChart.id}
                             activeChart={activeChart}
                             open={metricsOpen}
                             setOpen={setMetricsOpen}
