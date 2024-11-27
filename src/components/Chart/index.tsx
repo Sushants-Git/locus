@@ -24,7 +24,7 @@ import ChartNavigation from "./Navigation";
 
 import { Button } from "@/components/ui/button";
 import ChartSVG from "./icon-set";
-import { PerformanceGraphs } from "./PerformaceGraphsOld";
+import PerformanceGraphs from "./PerformaceGraphs";
 
 export default function Chart({ chart }: { chart: SessionHistory }) {
     const [showingHistory, setShowingHistory] = useState(false);
