@@ -52,6 +52,8 @@ function Timer({
     const titleChange = useRef({ currentTick: 0, previousTick: 0 });
     const titleRangesRef = useRef<TitleRanges[]>([]);
 
+    const timerStatusRef = useRef({ previousTimerStatus: "idle" });
+
     const minimumActivityDuration = useChartStore(
         useShallow(state => state.minimumActivityDuration)
     );
@@ -175,17 +177,35 @@ function Timer({
             titleRangesRef.current = [];
         };
 
-        if (timerStatus === "running" && isGreaterThanThreshold && isSameWindow && !ignoreTitles) {
-            updateAndResetRanges();
-        }
-
         // when we shift from running to break we want to flush the "titleRangesRef"
         if (!isSameWindow || timerStatus === "break") {
             flushTitleRanges();
         }
 
         if (isTickDiff) {
-            addTitleRange();
+            if (timerStatusRef.current.previousTimerStatus !== "break") {
+                addTitleRange();
+            }
+
+            if (
+                timerStatus === "running" &&
+                isGreaterThanThreshold &&
+                isSameWindow &&
+                !ignoreTitles
+            ) {
+                updateAndResetRanges();
+            }
+
+            if (timerStatus === "running") {
+                timerStatusRef.current.previousTimerStatus = "running";
+            }
+
+            if (
+                timerStatusRef.current.previousTimerStatus === "running" &&
+                timerStatus === "break"
+            ) {
+                timerStatusRef.current.previousTimerStatus = "break";
+            }
         } // effect gets triggered on activeWindow, `isTickDiff` makes sure that it does not `addTitleRange` on the same second
 
         windowNameRef.current.currentWindow = activeWindow.windowName;
