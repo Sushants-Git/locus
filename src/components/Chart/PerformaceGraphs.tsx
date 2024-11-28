@@ -19,6 +19,7 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { SessionHistory, TitleRanges } from "src/model/SessionHistory";
+import { Slider } from "@/components/ui/slider";
 
 interface PerformanceGraphsProps {
     children: React.ReactNode;
@@ -53,6 +54,8 @@ export const PerformanceGraphs: React.FC<PerformanceGraphsProps> = ({
 
     const [selectedBarFill, setSelectedBarFill] = useState("hsl(var(--chart-1))");
 
+    const [filterGraphsBelow, setFilterGraphsBelow] = useState(15);
+
     const secondaryChartData = useMemo(() => {
         if (!selectedBar) return [];
 
@@ -63,12 +66,12 @@ export const PerformanceGraphs: React.FC<PerformanceGraphsProps> = ({
         });
 
         return Array.from(secondaryChartMap)
-            .filter(([_, time]) => time > 60)
+            .filter(([_, time]) => time > filterGraphsBelow)
             .map(([title, time]) => ({
                 title,
                 time: Math.round((time / 60) * 10) / 10,
             }));
-    }, [activeChart, selectedBar]);
+    }, [activeChart, selectedBar, filterGraphsBelow]);
 
     const handleBarClick = (e: any) => {
         if (e.fill) setSelectedBarFill(e.fill);
@@ -101,11 +104,25 @@ export const PerformanceGraphs: React.FC<PerformanceGraphsProps> = ({
                                 />
                             </div>
                             <div className="grid gap-4 md:grid-cols-subgrid md:col-span-5">
-                                <SecondaryBarGraph
-                                    className="md:col-span-5"
-                                    data={secondaryChartData}
-                                    fill={selectedBarFill}
-                                />
+                                <div className="w-full md:col-span-5">
+                                    <div className="flex w-[80%] gap-5 mb-4 justify-center items-center">
+                                        <div className="text-sm text-muted-foreground whitespace-nowrap">
+                                            minimun duration
+                                        </div>
+                                        <Slider
+                                            value={[filterGraphsBelow]}
+                                            min={1}
+                                            max={120}
+                                            step={1}
+                                            onValueChange={e => setFilterGraphsBelow(e[0])}
+                                        />
+                                    </div>
+
+                                    <SecondaryBarGraph
+                                        data={secondaryChartData}
+                                        fill={selectedBarFill}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -130,7 +147,6 @@ function GraphDetails({ activeChart }: GraphDetailsProps) {
         let total = 0;
         const breakdown: { windowClass: string; time: number }[] = [];
 
-
         Array.from(activeChart.chartData).forEach(([windowClass, titleRanges]) => {
             const classTotal = titleRanges.reduce((acc, titleRange) => {
                 const duration = Math.abs(titleRange.range[1] - titleRange.range[0]);
@@ -146,7 +162,6 @@ function GraphDetails({ activeChart }: GraphDetailsProps) {
             activityBreakdown: breakdown.sort((a, b) => b.time - a.time),
         };
     }, [activeChart.chartData]);
-
 
     const productivityPercentage =
         (totalTimeSpentWorking /
@@ -251,15 +266,13 @@ function MainBarGraph({
     Array.from(data).forEach(([windowClass, titleRanges], index) => {
         const totalTime = titleRanges.reduce((acc, a) => acc + (a.range[1] - a.range[0]), 0);
 
-        if (totalTime > 60) {
-            chartData.push({
-                windowClass,
-                totalTime: Math.round((totalTime * 10) / 60) / 10,
-                fill: `hsl(var(--chart-${index + 1}))`,
-            });
+        chartData.push({
+            windowClass,
+            totalTime: Math.round((totalTime * 10) / 60) / 10,
+            fill: `hsl(var(--chart-${index + 1}))`,
+        });
 
-            chartConfig[windowClass] = { label: windowClass };
-        }
+        chartConfig[windowClass] = { label: windowClass };
     });
 
     return (
@@ -298,7 +311,7 @@ function SecondaryBarGraph({
     fill,
     data,
 }: {
-    className: string;
+    className?: string;
     fill: string;
     data: SecondaryChartData[];
 }) {
