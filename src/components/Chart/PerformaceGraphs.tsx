@@ -90,8 +90,8 @@ export const PerformanceGraphs: React.FC<PerformanceGraphsProps> = ({
                         Show you where and what you spent your time doing.
                     </DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="max-h-[32rem] w-full rounded-md border">
-                    <div className="p-4">
+                <ScrollArea className="max-h-[32rem] w-full rounded-md border p-4">
+                    <div>
                         <div className="grid gap-4 md:grid-cols-5">
                             <div className="md:grid gap-4 md:grid-cols-subgrid md:col-span-5">
                                 <div className="mb-4 md:mb-0 md:col-span-2">
