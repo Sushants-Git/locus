@@ -179,7 +179,6 @@ function GraphDetails({ activeChart }: GraphDetailsProps) {
                 />
                 <ProductivityProgress
                     totalTimeSpentWorking={totalTimeSpentWorking}
-                    pomodoroLength={activeChart.pomodoroLengthInSeconds}
                     productivityPercentage={productivityPercentage}
                 />
                 <Separator />
@@ -206,11 +205,9 @@ function SessionHeader({ sessionDate, workDuration }: { sessionDate: Date; workD
 
 function ProductivityProgress({
     totalTimeSpentWorking,
-    pomodoroLength,
     productivityPercentage,
 }: {
     totalTimeSpentWorking: number;
-    pomodoroLength: number;
     productivityPercentage: number;
 }) {
     return (
