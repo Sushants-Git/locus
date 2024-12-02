@@ -1,5 +1,5 @@
 # Locus
-[![AUR](https://img.shields.io/badge/AUR-v0.2.1-lightblue.svg)](https://aur.archlinux.org/packages/locus)
+[![AUR](https://img.shields.io/badge/AUR-v0.2.2-lightblue.svg)](https://aur.archlinux.org/packages/locus)
 [![GitHub Release](https://img.shields.io/github/release/Sushants-Git/locus.svg)](https://github.com/Sushants-Git/locus/releases)
 
 Locus has 2 simple goals: *tracking your focused moments* and *unveiling where the rest of your time silently flows.*
@@ -23,7 +23,7 @@ yay -S locus
 Locus provides pre-built binary packages for Debian-based distributions, including Ubuntu. Download the latest `.deb` package for your system architecture from the [GitHub Releases page](https://github.com/Sushants-Git/locus/releases/) and install it using `dpkg`:
 
 ```bash
-sudo dpkg -i locus_0.2.1_amd64.deb
+sudo dpkg -i locus_0.2.2_amd64.deb
 ```
 
 ### Key Features
