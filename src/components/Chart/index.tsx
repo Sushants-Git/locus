@@ -54,7 +54,7 @@ export default function Chart({ chart }: { chart: SessionHistory }) {
     };
 
     const handleDelete = async () => {
-        await deleteChart(chartHistory[historyIndex].id);
+        deleteChart(chartHistory[historyIndex].id);
         if (historyIndex > 0) {
             handleBack();
         } else if (chartHistory.length !== 1) {
